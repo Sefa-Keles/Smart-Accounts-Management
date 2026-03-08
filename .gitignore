@@ -13,6 +13,7 @@ build/
 venv/
 ENV/
 env/
+env.py
 
 # Environment Variables
 .env
