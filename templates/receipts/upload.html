@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="sam-card">
+                <div class="card-body">
+                    <h2 class="card-title mb-4">
+                        <i class="bi bi-cloud-upload"></i> Upload Receipt
+                    </h2>
+                    
+                    <p class="text-muted mb-4">
+                        Upload your receipt. Our OCR technology will automatically analyze it 
+                        and save your transaction. 🚀
+                    </p>
+                    
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        
+                        {{ form|crispy }}
+                        
+                        <div class="alert alert-info mt-3">
+                            <i class="bi bi-info-circle"></i>
+                            <strong>Accepted Formats:</strong> JPG, PNG, PDF<br>
+                            <strong>Maximum Size:</strong> 5MB
+                        </div>
+                        
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
+                            <a href="{% url 'receipt_list' %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-sam">
+                                <i class="bi bi-cloud-upload"></i> Upload & Process
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+            
+            <div class="mt-4">
+                <h5>📌 How It Works?</h5>
+                <ol class="text-muted">
+                    <li><strong>Upload:</strong> Select and upload your receipt file</li>
+                    <li><strong>OCR:</strong> System automatically extracts vendor, date and amount</li>
+                    <li><strong>Review:</strong> Check OCR results and make corrections if needed</li>
+                    <li><strong>Save:</strong> Confirm and save the transaction to your account</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

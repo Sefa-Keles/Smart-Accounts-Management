@@ -1,0 +1,144 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row">
+        <!-- Left: Receipt Image -->
+        <div class="col-md-6 mb-4">
+            <div class="sam-card">
+                <div class="card-header bg-sam-navy text-white">
+                    <h5 class="mb-0"><i class="bi bi-image"></i> Receipt Image</h5>
+                </div>
+                <div class="card-body text-center">
+                    {% if '.pdf' in receipt.original_filename.lower %}
+                        <i class="bi bi-file-pdf" style="font-size: 8rem; color: #dc3545;"></i>
+                        <p class="mt-3">
+                            <a href="{{ receipt.cloudinary_url }}" target="_blank" class="btn btn-primary">
+                                <i class="bi bi-download"></i> Open PDF
+                            </a>
+                        </p>
+                    {% else %}
+                        <img src="{{ receipt.cloudinary_url }}" 
+                             alt="{{ receipt.original_filename }}" 
+                             class="img-fluid rounded shadow">
+                        <p class="mt-3">
+                            <a href="{{ receipt.cloudinary_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                <i class="bi bi-arrows-fullscreen"></i> Full Size
+                            </a>
+                        </p>
+                    {% endif %}
+                    
+                    <div class="mt-3">
+                        <small class="text-muted">{{ receipt.original_filename }}</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Right: OCR Results and Details -->
+        <div class="col-md-6">
+            <!-- Information Card -->
+            <div class="sam-card mb-3">
+                <div class="card-header bg-sam-navy text-white">
+                    <h5 class="mb-0"><i class="bi bi-info-circle"></i> Receipt Information</h5>
+                </div>
+                <div class="card-body">
+                    <table class="table table-sm">
+                        <tr>
+                            <th width="40%">Status:</th>
+                            <td>
+                                {% if receipt.status == 'pending' %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-hourglass-split"></i> Pending OCR
+                                    </span>
+                                {% elif receipt.status == 'reviewed' %}
+                                    <span class="badge bg-info">
+                                        <i class="bi bi-eye"></i> Under Review
+                                    </span>
+                                {% elif receipt.status == 'saved' %}
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle"></i> Saved
+                                    </span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Upload Date:</th>
+                            <td>{{ receipt.uploaded_at|date:"d F Y, H:i" }}</td>
+                        </tr>
+                        <tr>
+                            <th>File Name:</th>
+                            <td class="text-truncate" title="{{ receipt.original_filename }}">
+                                {{ receipt.original_filename }}
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+            
+            <!-- OCR Results -->
+            <div class="sam-card mb-3">
+                <div class="card-header bg-sam-navy text-white">
+                    <h5 class="mb-0"><i class="bi bi-robot"></i> OCR Results</h5>
+                </div>
+                <div class="card-body">
+                    {% if receipt.ocr_vendor or receipt.ocr_amount or receipt.ocr_date %}
+                        <table class="table table-sm">
+                            {% if receipt.ocr_vendor %}
+                            <tr>
+                                <th width="40%">Vendor:</th>
+                                <td>{{ receipt.ocr_vendor }}</td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if receipt.ocr_amount %}
+                            <tr>
+                                <th>Amount:</th>
+                                <td class="fs-5 text-success">
+                                    <strong>{{ receipt.ocr_amount }} ₺</strong>
+                                </td>
+                            </tr>
+                            {% endif %}
+                            
+                            {% if receipt.ocr_date %}
+                            <tr>
+                                <th>Date:</th>
+                                <td>{{ receipt.ocr_date|date:"d/m/Y" }}</td>
+                            </tr>
+                            {% endif %}
+                        </table>
+                        
+                        {% if receipt.ocr_raw_text %}
+                        <div class="mt-3">
+                            <strong>Raw OCR Text:</strong>
+                            <div class="small text-muted bg-light p-2 rounded mt-1" style="max-height: 150px; overflow-y: auto;">
+                                {{ receipt.ocr_raw_text|linebreaks }}
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center text-muted py-4">
+                            <i class="bi bi-hourglass-split" style="font-size: 3rem;"></i>
+                            <p class="mt-2">OCR processing not yet completed</p>
+                            <small>Receipt will be processed by OCR in PHASE 3.3</small>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="d-grid gap-2">
+                {% if receipt.status == 'reviewed' %}
+                    <a href="#" class="btn btn-sam">
+                        <i class="bi bi-pencil"></i> Edit & Save Transaction
+                    </a>
+                {% endif %}
+                
+                <a href="{% url 'receipt_list' %}" class="btn btn-outline-secondary">
+                    <i class="bi bi-arrow-left"></i> Back to Receipts
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
