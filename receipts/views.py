@@ -1,10 +1,12 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.urls import reverse
+from django.core.paginator import Paginator
 import cloudinary.uploader
+from transactions.models import Transaction
 from .models import Receipt
-from .forms import ReceiptUploadForm
+from .forms import ReceiptUploadForm, ReceiptReviewForm
+from .utils import process_receipt_with_ocr
 
 
 @login_required
@@ -14,7 +16,8 @@ def upload_receipt(request):
     - Gets file from user
     - Uploads to Cloudinary
     - Creates Receipt record
-     """
+    - Processes OCR data via OCR.space
+    """
     if request.method == 'POST':
         form = ReceiptUploadForm(request.POST, request.FILES)
         
@@ -37,15 +40,30 @@ def upload_receipt(request):
                     original_filename=uploaded_file.name,
                     status='pending'  # Waiting for OCR
                 )
+
+                # Process OCR after successful upload
+                ocr_result = process_receipt_with_ocr(receipt.cloudinary_url)
+                if ocr_result.get('success'):
+                    receipt.ocr_raw_text = ocr_result.get('raw_text')
+                    receipt.ocr_vendor = ocr_result.get('vendor')
+                    receipt.ocr_amount = ocr_result.get('amount')
+                    receipt.ocr_date = ocr_result.get('date')
+                    receipt.status = 'reviewed'
+                    receipt.save(
+                        update_fields=['ocr_raw_text', 'ocr_vendor', 'ocr_amount', 'ocr_date', 'status']
+                    )
+                    messages.success(
+                        request,
+                        'Receipt uploaded and OCR processed successfully.'
+                    )
+                else:
+                    messages.warning(
+                        request,
+                        f"Receipt uploaded, but OCR could not be completed: {ocr_result.get('error')}. Please enter data manually."
+                    )
                 
-                messages.success(
-                    request, 
-                    'Receipt uploaded successfully! OCR processing started...'
-                )
-                
-                # OCR function will be added in PHASE 3.3
-                # Redirect to receipt list page
-                return redirect('receipt_list')
+                # Always continue with the review step before saving transaction
+                return redirect('receipt_review', receipt_id=receipt.id)
                 
             except Exception as e:
                 messages.error(
@@ -57,7 +75,7 @@ def upload_receipt(request):
     
     return render(request, 'receipts/upload.html', {
         'form': form,
-        'page_title': 'Fatura Yükle'
+        'page_title': 'Upload Receipt'
     })
 
 
@@ -67,9 +85,13 @@ def receipt_list(request):
     List of user's uploaded receipts.
     """
     receipts = Receipt.objects.filter(user=request.user)
+    paginator = Paginator(receipts, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
     
     return render(request, 'receipts/receipt_list.html', {
-        'receipts': receipts,
+        'receipts': page_obj,
+        'page_obj': page_obj,
         'page_title': 'My Receipts'
     })
 
@@ -84,5 +106,52 @@ def receipt_detail(request, receipt_id):
     return render(request, 'receipts/receipt_detail.html', {
         'receipt': receipt,
         'page_title': f'Receipt #{receipt.id}'
+    })
+
+
+@login_required
+def receipt_review(request, receipt_id):
+    """
+    Review OCR result (or manual input) and create transaction only on confirmation.
+    """
+    receipt = get_object_or_404(Receipt, id=receipt_id, user=request.user)
+
+    initial_data = {
+        'vendor_name': receipt.ocr_vendor or '',
+        'amount': receipt.ocr_amount,
+        'date': receipt.ocr_date,
+        'transaction_type': 'expense',
+        'flag': 'personal',
+    }
+
+    if request.method == 'POST':
+        form = ReceiptReviewForm(request.POST, user=request.user)
+        if form.is_valid():
+            Transaction.objects.create(
+                user=request.user,
+                receipt=receipt,
+                vendor_name=form.cleaned_data['vendor_name'],
+                amount=form.cleaned_data['amount'],
+                date=form.cleaned_data['date'],
+                transaction_type=form.cleaned_data['transaction_type'],
+                flag=form.cleaned_data['flag'],
+                category=form.cleaned_data['category'],
+            )
+
+            receipt.ocr_vendor = form.cleaned_data['vendor_name']
+            receipt.ocr_amount = form.cleaned_data['amount']
+            receipt.ocr_date = form.cleaned_data['date']
+            receipt.status = 'saved'
+            receipt.save(update_fields=['ocr_vendor', 'ocr_amount', 'ocr_date', 'status'])
+
+            messages.success(request, 'Transaction saved successfully.')
+            return redirect('receipt_detail', receipt_id=receipt.id)
+    else:
+        form = ReceiptReviewForm(initial=initial_data, user=request.user)
+
+    return render(request, 'receipts/review.html', {
+        'receipt': receipt,
+        'form': form,
+        'page_title': f'Review Receipt #{receipt.id}',
     })
 

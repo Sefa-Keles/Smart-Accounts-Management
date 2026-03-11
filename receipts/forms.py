@@ -1,5 +1,6 @@
 from django import forms
-from .models import Receipt
+from django.db.models import Q
+from core.models import Category
 
 
 class ReceiptUploadForm(forms.Form):
@@ -44,3 +45,36 @@ class ReceiptUploadForm(forms.Form):
                 )
         
         return file
+
+
+class ReceiptReviewForm(forms.Form):
+    """
+    Review form used before creating a transaction from a receipt.
+    OCR values are used as initial values, but user can edit everything.
+    """
+
+    vendor_name = forms.CharField(max_length=255, required=True)
+    amount = forms.DecimalField(max_digits=10, decimal_places=2, required=True)
+    date = forms.DateField(
+        required=True,
+        widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
+        input_formats=["%Y-%m-%d", "%d/%m/%Y", "%d-%m-%Y"],
+    )
+    transaction_type = forms.ChoiceField(
+        choices=[("expense", "Expense"), ("income", "Income")],
+        required=True,
+    )
+    flag = forms.ChoiceField(
+        choices=[("personal", "Personal"), ("business", "Business")],
+        required=True,
+    )
+    category = forms.ModelChoiceField(queryset=Category.objects.none(), required=False)
+
+    def __init__(self, *args, user=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        if user is None:
+            self.fields["category"].queryset = Category.objects.none()
+        else:
+            self.fields["category"].queryset = Category.objects.filter(
+                Q(user=user) | Q(is_system=True)
+            ).distinct()

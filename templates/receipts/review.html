@@ -1,0 +1,51 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <div class="sam-card">
+                <div class="card-body">
+                    <h2 class="card-title mb-3">
+                        <i class="bi bi-pencil-square"></i> Review Receipt Data
+                    </h2>
+                    <p class="text-muted mb-4">
+                        Check the extracted values and edit any field before saving.
+                    </p>
+
+                    <div class="mb-3">
+                        <a href="{{ receipt.cloudinary_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                            <i class="bi bi-box-arrow-up-right"></i> Open Uploaded File
+                        </a>
+                        <span class="ms-2 text-muted small">{{ receipt.original_filename }}</span>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        {{ form|crispy }}
+
+                        <div class="d-flex justify-content-end gap-2 mt-3">
+                            <a href="{% url 'receipt_detail' receipt.id %}" class="btn btn-outline-secondary">Cancel</a>
+                            <button type="submit" class="btn btn-sam">
+                                <i class="bi bi-check2-circle"></i> Confirm and Save
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            {% if receipt.ocr_raw_text %}
+            <div class="sam-card mt-4">
+                <div class="card-body">
+                    <h5>Raw OCR Text</h5>
+                    <div class="small text-muted bg-light p-2 rounded" style="max-height: 220px; overflow-y: auto;">
+                        {{ receipt.ocr_raw_text|linebreaks }}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

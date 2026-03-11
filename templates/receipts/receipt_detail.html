@@ -128,11 +128,9 @@
             
             <!-- Action Buttons -->
             <div class="d-grid gap-2">
-                {% if receipt.status == 'reviewed' %}
-                    <a href="#" class="btn btn-sam">
-                        <i class="bi bi-pencil"></i> Edit & Save Transaction
-                    </a>
-                {% endif %}
+                <a href="{% url 'receipt_review' receipt.id %}" class="btn btn-sam">
+                    <i class="bi bi-pencil"></i> Review / Manual Entry
+                </a>
                 
                 <a href="{% url 'receipt_list' %}" class="btn btn-outline-secondary">
                     <i class="bi bi-arrow-left"></i> Back to Receipts

@@ -49,20 +49,36 @@
                                 {% endif %}
                             </div>
                             
-                            <!-- OCR Information (if available) -->
-                            {% if receipt.ocr_vendor or receipt.ocr_amount %}
-                                <div class="small text-muted mb-2">
-                                    {% if receipt.ocr_vendor %}
-                                        <div><strong>Vendor:</strong> {{ receipt.ocr_vendor }}</div>
-                                    {% endif %}
+                            <!-- Receipt Data -->
+                            <div class="small text-muted mb-2">
+                                <div><strong>Vendor:</strong> {{ receipt.ocr_vendor|default:"-" }}</div>
+                                <div>
+                                    <strong>Amount:</strong>
                                     {% if receipt.ocr_amount %}
-                                        <div><strong>Amount:</strong> {{ receipt.ocr_amount }} ₺</div>
-                                    {% endif %}
-                                    {% if receipt.ocr_date %}
-                                        <div><strong>Date:</strong> {{ receipt.ocr_date|date:"d/m/Y" }}</div>
+                                        {{ receipt.ocr_amount }} ₺
+                                    {% else %}
+                                        -
                                     {% endif %}
                                 </div>
-                            {% endif %}
+                                <div>
+                                    <strong>Date:</strong>
+                                    {% if receipt.ocr_date %}
+                                        {{ receipt.ocr_date|date:"d/m/Y" }}
+                                    {% else %}
+                                        -
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    <strong>Category:</strong>
+                                    {% with transaction=receipt.transactions.first %}
+                                        {% if transaction and transaction.category %}
+                                            {{ transaction.category.name }}
+                                        {% else %}
+                                            -
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                            </div>
                             
                             <!-- Upload Time -->
                             <p class="small text-muted">
@@ -80,6 +96,28 @@
                 </div>
             {% endfor %}
         </div>
+
+        {% if page_obj.paginator.num_pages > 1 %}
+        <nav aria-label="Receipt pagination" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a>
+                    </li>
+                {% endif %}
+
+                <li class="page-item disabled">
+                    <span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                </li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a>
+                    </li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
     {% else %}
         <div class="text-center py-5">
             <i class="bi bi-inbox" style="font-size: 5rem; color: var(--sam-navy-light);"></i>
