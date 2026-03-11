@@ -1,52 +1,101 @@
 {% extends "base.html" %}
-{% load crispy_forms_tags %}
 
 {% block content %}
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="sam-card">
-                <div class="card-body">
-                    <h2 class="card-title mb-4">
-                        <i class="bi bi-cloud-upload"></i> Upload Receipt
-                    </h2>
-                    
-                    <p class="text-muted mb-4">
-                        Upload your receipt. Our OCR technology will automatically analyze it 
-                        and save your transaction. 🚀
-                    </p>
-                    
-                    <form method="post" enctype="multipart/form-data">
+<div class="upload-shell">
+    <div class="hero-strip mb-4">
+        <div class="d-flex flex-column gap-2">
+            <div>
+                <h2 class="mb-1"><i class="bi bi-receipt-cutoff me-2"></i>Upload Receipt</h2>
+                <p class="mb-0 text-muted">Drop a receipt file and let OCR pre-fill your transaction details.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 align-items-stretch">
+        <div class="col-lg-7">
+            <div class="sam-card h-100">
+                <div class="card-body p-4 p-md-5">
+                    <form method="post" enctype="multipart/form-data" novalidate>
                         {% csrf_token %}
-                        
-                        {{ form|crispy }}
-                        
-                        <div class="alert alert-info mt-3">
-                            <i class="bi bi-info-circle"></i>
-                            <strong>Accepted Formats:</strong> JPG, PNG, PDF<br>
-                            <strong>Maximum Size:</strong> 5MB
+
+                        <label for="{{ form.file.id_for_label }}" class="form-label fw-semibold">Receipt File</label>
+                        <div class="upload-dropzone mb-3">
+                            {{ form.file }}
+                            <p class="small text-muted mt-2 mb-0">JPG, PNG or PDF accepted. Maximum 5MB.</p>
                         </div>
-                        
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <a href="{% url 'receipt_list' %}" class="btn btn-secondary">
-                                <i class="bi bi-arrow-left"></i> Cancel
+                        {% if form.file.errors %}
+                            <div class="alert alert-danger py-2" role="alert">
+                                {{ form.file.errors|join:", " }}
+                            </div>
+                        {% endif %}
+
+                        <div class="sam-hint-box mb-4">
+                            <i class="bi bi-shield-check me-2"></i>
+                            Your file is processed securely and linked only to your account.
+                        </div>
+
+                        <div class="d-flex flex-column flex-sm-row gap-2 justify-content-end">
+                            <a href="{% url 'receipt_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Back
                             </a>
-                            <button type="submit" class="btn btn-sam">
-                                <i class="bi bi-cloud-upload"></i> Upload & Process
+                            <button type="submit" class="btn btn-sam px-4">
+                                <i class="bi bi-cloud-arrow-up me-1"></i>Upload & Process
                             </button>
                         </div>
                     </form>
                 </div>
             </div>
-            
-            <div class="mt-4">
-                <h5>📌 How It Works?</h5>
-                <ol class="text-muted">
-                    <li><strong>Upload:</strong> Select and upload your receipt file</li>
-                    <li><strong>OCR:</strong> System automatically extracts vendor, date and amount</li>
-                    <li><strong>Review:</strong> Check OCR results and make corrections if needed</li>
-                    <li><strong>Save:</strong> Confirm and save the transaction to your account</li>
-                </ol>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="sam-card h-100">
+                <div class="card-body p-4 how-it-works-panel">
+                    <h5 class="mb-3">How It Works</h5>
+                    <div class="workflow-step">
+                        <div>
+                            <div class="workflow-step-header">
+                                <span class="workflow-order">1</span>
+                                <span class="workflow-sep" aria-hidden="true">-</span>
+                                <span class="workflow-index"><i class="bi bi-upload"></i></span>
+                                <strong>Upload</strong>
+                            </div>
+                            <p class="text-muted mb-0">Choose your receipt image or PDF.</p>
+                        </div>
+                    </div>
+                    <div class="workflow-step">
+                        <div>
+                            <div class="workflow-step-header">
+                                <span class="workflow-order">2</span>
+                                <span class="workflow-sep" aria-hidden="true">-</span>
+                                <span class="workflow-index"><i class="bi bi-file-earmark-text"></i></span>
+                                <strong>Extract</strong>
+                            </div>
+                            <p class="text-muted mb-0">OCR reads vendor, date and total amount.</p>
+                        </div>
+                    </div>
+                    <div class="workflow-step">
+                        <div>
+                            <div class="workflow-step-header">
+                                <span class="workflow-order">3</span>
+                                <span class="workflow-sep" aria-hidden="true">-</span>
+                                <span class="workflow-index"><i class="bi bi-pencil-square"></i></span>
+                                <strong>Review</strong>
+                            </div>
+                            <p class="text-muted mb-0">You can edit all detected fields before saving.</p>
+                        </div>
+                    </div>
+                    <div class="workflow-step mb-0">
+                        <div>
+                            <div class="workflow-step-header">
+                                <span class="workflow-order">4</span>
+                                <span class="workflow-sep" aria-hidden="true">-</span>
+                                <span class="workflow-index"><i class="bi bi-check2-circle"></i></span>
+                                <strong>Save</strong>
+                            </div>
+                            <p class="text-muted mb-0">Confirm and create your transaction record.</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
