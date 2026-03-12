@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% load crispy_forms_tags %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-7">
+
+            <div class="hero-strip mb-4">
+                <h2 class="mb-1"><i class="bi bi-pencil-square me-2"></i>Edit Transaction</h2>
+                <p class="mb-0 text-muted">
+                    {{ transaction.vendor_name }} &mdash; {{ transaction.date|date:"d M Y" }}
+                </p>
+            </div>
+
+            <div class="sam-card">
+                <div class="card-body p-4">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {{ form|crispy }}
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a href="{% url 'transaction_list' %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left me-1"></i>Cancel
+                            </a>
+                            <button type="submit" class="btn btn-sam px-4">
+                                <i class="bi bi-check2-circle me-1"></i>Save Changes
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
