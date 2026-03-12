@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-6">
+
+            <div class="sam-card">
+                <div class="card-body p-4 text-center">
+                    <i class="bi bi-exclamation-triangle text-danger mb-3" style="font-size: 3rem;"></i>
+                    <h3 class="mb-1">Delete Transaction?</h3>
+                    <p class="text-muted mb-4">This action cannot be undone.</p>
+
+                    <div class="sam-hint-box text-start mb-4">
+                        <div><strong>Vendor:</strong> {{ transaction.vendor_name }}</div>
+                        <div><strong>Amount:</strong> {{ transaction.amount }} ₺</div>
+                        <div><strong>Date:</strong> {{ transaction.date|date:"d M Y" }}</div>
+                    </div>
+
+                    <form method="post" class="d-flex justify-content-center gap-3">
+                        {% csrf_token %}
+                        <a href="{% url 'transaction_list' %}" class="btn btn-outline-secondary">
+                            <i class="bi bi-arrow-left me-1"></i>Cancel
+                        </a>
+                        <button type="submit" class="btn btn-danger px-4">
+                            <i class="bi bi-trash me-1"></i>Yes, Delete
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
