@@ -1,4 +1,5 @@
 {% extends 'base.html' %}
+{% load static %}
 
 {% block title %}Dashboard | Smart Accounts{% endblock %}
 
@@ -60,4 +61,21 @@
         </table>
     </div>
 </div>
+
+<div class="sam-card p-3 p-md-4 mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">Expense Breakdown by Category</h2>
+        <span class="text-muted small">Current month</span>
+    </div>
+    {% if expense_category_totals %}
+        {{ expense_category_labels|json_script:"expense-category-labels" }}
+        {{ expense_category_totals|json_script:"expense-category-totals" }}
+        <canvas id="expenseCategoryChart" height="120"></canvas>
+    {% else %}
+        <p class="text-muted mb-0">No expense data available for the current month.</p>
+    {% endif %}
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script src="{% static 'js/dashboard.js' %}"></script>
 {% endblock %}
