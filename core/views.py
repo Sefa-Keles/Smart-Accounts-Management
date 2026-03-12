@@ -33,10 +33,26 @@ def dashboard(request):
         elif row['transaction_type'] == 'expense':
             expense = row['total'] or Decimal('0.00')
 
+    expense_by_category = (
+        month_transactions.filter(transaction_type='expense')
+        .values('category__name')
+        .annotate(total=Sum('amount'))
+        .order_by('-total')
+    )
+
+    category_labels = []
+    category_totals = []
+    for item in expense_by_category:
+        category_name = item['category__name'] or 'Uncategorized'
+        category_labels.append(category_name)
+        category_totals.append(float(item['total'] or 0))
+
     context = {
         'income_total': income,
         'expense_total': expense,
         'net_balance': income - expense,
-        'recent_transactions': Transaction.objects.filter(user=request.user)[:5],
+        'recent_transactions': month_transactions.order_by('-date', '-created_at')[:5],
+        'expense_category_labels': category_labels,
+        'expense_category_totals': category_totals,
     }
     return render(request, 'core/dashboard.html', context)
