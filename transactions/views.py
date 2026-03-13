@@ -1,7 +1,9 @@
+import csv
 from datetime import datetime
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
@@ -9,9 +11,8 @@ from .forms import TransactionForm
 from .models import Transaction
 
 
-@login_required
-def transaction_list(request):
-	"""Display all transactions that belong to the current user."""
+def _get_filtered_transactions(request, persist_filters=True):
+	"""Return user transactions filtered by month or date range."""
 	today = timezone.now().date()
 	session_filters = request.session.get("transaction_filters", {})
 
@@ -29,11 +30,12 @@ def transaction_list(request):
 		selected_month = request.GET.get("month", "").strip()
 		start_date = request.GET.get("start_date", "").strip()
 		end_date = request.GET.get("end_date", "").strip()
-		request.session["transaction_filters"] = {
-			"month": selected_month,
-			"start_date": start_date,
-			"end_date": end_date,
-		}
+		if persist_filters:
+			request.session["transaction_filters"] = {
+				"month": selected_month,
+				"start_date": start_date,
+				"end_date": end_date,
+			}
 	else:
 		selected_month = session_filters.get("month", today.strftime("%Y-%m"))
 		start_date = session_filters.get("start_date", "")
@@ -67,6 +69,16 @@ def transaction_list(request):
 			selected_month = today.strftime("%Y-%m")
 
 	transactions = transactions.order_by("-date", "-created_at")
+	return transactions, selected_month, start_date, end_date, filter_label
+
+
+@login_required
+def transaction_list(request):
+	"""Display all transactions that belong to the current user."""
+	transactions, selected_month, start_date, end_date, filter_label = _get_filtered_transactions(
+		request,
+		persist_filters=True,
+	)
 	return render(
 		request,
 		"transactions/list.html",
@@ -79,6 +91,40 @@ def transaction_list(request):
 			"filter_label": filter_label,
 		},
 	)
+
+
+@login_required
+def transaction_export_csv(request):
+	"""Export all or filtered transactions as CSV."""
+	scope = request.GET.get("scope", "filtered")
+
+	if scope == "all":
+		transactions = Transaction.objects.filter(user=request.user).order_by("-date", "-created_at")
+	else:
+		transactions, _, _, _, _ = _get_filtered_transactions(request, persist_filters=False)
+
+	response = HttpResponse(content_type="text/csv")
+	response["Content-Disposition"] = (
+		f'attachment; filename="transactions_{timezone.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+	)
+
+	writer = csv.writer(response)
+	writer.writerow(["date", "vendor", "category", "amount", "type", "business_personal_flag"])
+
+	for tx in transactions.select_related("category"):
+		category_name = tx.category.name if tx.category else ""
+		writer.writerow(
+			[
+				tx.date.isoformat(),
+				tx.vendor_name,
+				category_name,
+				str(tx.amount),
+				tx.transaction_type,
+				tx.flag,
+			]
+		)
+
+	return response
 
 
 @login_required
