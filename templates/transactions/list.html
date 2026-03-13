@@ -7,6 +7,17 @@
         <h2><i class="bi bi-list-ul me-2"></i>My Transactions</h2>
     </div>
 
+    <div class="d-flex flex-column flex-sm-row gap-2 justify-content-sm-end mb-3">
+        <a href="{% url 'transaction_export_csv' %}?scope=filtered"
+           class="btn btn-outline-primary btn-sm">
+            <i class="bi bi-download me-1"></i>Export Filtered CSV
+        </a>
+        <a href="{% url 'transaction_export_csv' %}?scope=all"
+           class="btn btn-sam btn-sm">
+            <i class="bi bi-download me-1"></i>Export All CSV
+        </a>
+    </div>
+
     <div class="sam-card p-3 mb-4">
         <form method="get" class="row g-2 align-items-end">
             <div class="col-12 col-md-3">
