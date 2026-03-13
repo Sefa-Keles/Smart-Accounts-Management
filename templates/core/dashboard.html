@@ -11,16 +11,37 @@
     </div>
 </div>
 
+<div class="sam-card p-3 mb-4">
+    <form method="get" class="row g-2 align-items-end">
+        <div class="col-12 col-md-3">
+            <label for="month" class="form-label small text-muted mb-1">Filter by month</label>
+            <input type="month" id="month" name="month" value="{{ selected_month }}" class="form-control">
+        </div>
+        <div class="col-6 col-md-3">
+            <label for="start_date" class="form-label small text-muted mb-1">Start date</label>
+            <input type="date" id="start_date" name="start_date" value="{{ start_date }}" class="form-control">
+        </div>
+        <div class="col-6 col-md-3">
+            <label for="end_date" class="form-label small text-muted mb-1">End date</label>
+            <input type="date" id="end_date" name="end_date" value="{{ end_date }}" class="form-control">
+        </div>
+        <div class="col-12 col-md-3 d-grid d-md-flex gap-2">
+            <button type="submit" class="btn btn-sam w-100">Apply</button>
+            <a href="?clear_filters=1" class="btn btn-outline-secondary w-100">Reset</a>
+        </div>
+    </form>
+</div>
+
 <div class="row g-3 mb-4">
     <div class="col-12 col-md-4">
         <div class="amount-box">
-            <h2 class="h6 text-muted mb-1">Income (This Month)</h2>
+            <h2 class="h6 text-muted mb-1">Income ({{ filter_label }})</h2>
             <p class="h4 mb-0">GBP {{ income_total }}</p>
         </div>
     </div>
     <div class="col-12 col-md-4">
         <div class="amount-box">
-            <h2 class="h6 text-muted mb-1">Expense (This Month)</h2>
+            <h2 class="h6 text-muted mb-1">Expense ({{ filter_label }})</h2>
             <p class="h4 mb-0">GBP {{ expense_total }}</p>
         </div>
     </div>
@@ -65,7 +86,7 @@
 <div class="sam-card p-3 p-md-4 mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="h5 mb-0">Expense Breakdown by Category</h2>
-        <span class="text-muted small">Current month</span>
+        <span class="text-muted small">{{ filter_label }}</span>
     </div>
     {% if expense_category_totals %}
         {{ expense_category_labels|json_script:"expense-category-labels" }}
