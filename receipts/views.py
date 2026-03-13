@@ -3,10 +3,36 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.paginator import Paginator
 import cloudinary.uploader
+from urllib.parse import urlparse
 from transactions.models import Transaction
 from .models import Receipt
 from .forms import ReceiptUploadForm, ReceiptReviewForm
 from .utils import process_receipt_with_ocr
+
+
+def _public_id_from_url(file_url):
+    """Fallback public_id parser for receipts created before public_id storage."""
+    try:
+        path = urlparse(file_url).path
+        marker = '/upload/'
+        if marker not in path:
+            return None
+
+        public_part = path.split(marker, 1)[1]
+
+        # Strip version segment such as v1712345678/
+        if public_part.startswith('v') and '/' in public_part:
+            version_part, rest = public_part.split('/', 1)
+            if version_part[1:].isdigit():
+                public_part = rest
+
+        # Strip extension
+        if '.' in public_part:
+            public_part = public_part.rsplit('.', 1)[0]
+
+        return public_part
+    except Exception:
+        return None
 
 
 @login_required
@@ -37,6 +63,7 @@ def upload_receipt(request):
                 receipt = Receipt.objects.create(
                     user=request.user,
                     cloudinary_url=upload_result['secure_url'],
+                    cloudinary_public_id=upload_result.get('public_id'),
                     original_filename=uploaded_file.name,
                     status='pending'  # Waiting for OCR
                 )
@@ -154,4 +181,26 @@ def receipt_review(request, receipt_id):
         'form': form,
         'page_title': f'Review Receipt #{receipt.id}',
     })
+
+
+@login_required
+def receipt_delete(request, receipt_id):
+    """Delete a user's receipt after confirmation, including related data."""
+    receipt = get_object_or_404(Receipt, id=receipt_id, user=request.user)
+
+    if request.method == 'POST':
+        # Delete related transaction(s) linked with this receipt
+        Transaction.objects.filter(receipt=receipt, user=request.user).delete()
+
+        # Remove file from Cloudinary
+        public_id = receipt.cloudinary_public_id or _public_id_from_url(receipt.cloudinary_url)
+        if public_id:
+            cloudinary.uploader.destroy(public_id, resource_type='image', invalidate=True)
+            cloudinary.uploader.destroy(public_id, resource_type='raw', invalidate=True)
+
+        receipt.delete()
+        messages.success(request, 'Receipt and related transaction deleted successfully.')
+        return redirect('receipt_list')
+
+    return render(request, 'receipts/delete.html', {'receipt': receipt})
 
