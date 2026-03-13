@@ -1,6 +1,9 @@
+from datetime import datetime
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 
 from .forms import TransactionForm
 from .models import Transaction
@@ -9,13 +12,71 @@ from .models import Transaction
 @login_required
 def transaction_list(request):
 	"""Display all transactions that belong to the current user."""
+	today = timezone.now().date()
+	session_filters = request.session.get("transaction_filters", {})
+
+	clear_filters = request.GET.get("clear_filters") == "1"
+	request_has_filter_params = any(
+		key in request.GET for key in ["month", "start_date", "end_date"]
+	)
+
+	if clear_filters:
+		request.session.pop("transaction_filters", None)
+		selected_month = today.strftime("%Y-%m")
+		start_date = ""
+		end_date = ""
+	elif request_has_filter_params:
+		selected_month = request.GET.get("month", "").strip()
+		start_date = request.GET.get("start_date", "").strip()
+		end_date = request.GET.get("end_date", "").strip()
+		request.session["transaction_filters"] = {
+			"month": selected_month,
+			"start_date": start_date,
+			"end_date": end_date,
+		}
+	else:
+		selected_month = session_filters.get("month", today.strftime("%Y-%m"))
+		start_date = session_filters.get("start_date", "")
+		end_date = session_filters.get("end_date", "")
+
 	transactions = Transaction.objects.filter(user=request.user)
+	filter_label = "Current month"
+
+	if start_date and end_date:
+		try:
+			start_obj = datetime.strptime(start_date, "%Y-%m-%d").date()
+			end_obj = datetime.strptime(end_date, "%Y-%m-%d").date()
+			transactions = transactions.filter(date__range=[start_obj, end_obj])
+			filter_label = f"{start_obj:%d %b %Y} - {end_obj:%d %b %Y}"
+		except ValueError:
+			selected_month = today.strftime("%Y-%m")
+			start_date = ""
+			end_date = ""
+
+	if not start_date or not end_date:
+		if selected_month:
+			try:
+				year, month = selected_month.split("-")
+				transactions = transactions.filter(date__year=int(year), date__month=int(month))
+				filter_label = datetime(int(year), int(month), 1).strftime("%B %Y")
+			except (ValueError, TypeError):
+				transactions = transactions.filter(date__year=today.year, date__month=today.month)
+				selected_month = today.strftime("%Y-%m")
+		else:
+			transactions = transactions.filter(date__year=today.year, date__month=today.month)
+			selected_month = today.strftime("%Y-%m")
+
+	transactions = transactions.order_by("-date", "-created_at")
 	return render(
 		request,
 		"transactions/list.html",
 		{
 			"transactions": transactions,
 			"page_title": "My Transactions",
+			"selected_month": selected_month,
+			"start_date": start_date,
+			"end_date": end_date,
+			"filter_label": filter_label,
 		},
 	)
 
