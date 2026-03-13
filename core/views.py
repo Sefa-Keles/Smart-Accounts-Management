@@ -1,3 +1,4 @@
+from datetime import datetime
 from decimal import Decimal
 
 from django.contrib.auth.decorators import login_required
@@ -17,11 +18,67 @@ def home(request):
 def dashboard(request):
     """User dashboard with current-month financial summary."""
     today = timezone.now().date()
-    month_transactions = Transaction.objects.filter(
-        user=request.user,
-        date__year=today.year,
-        date__month=today.month,
+    session_filters = request.session.get('transaction_filters', {})
+
+    clear_filters = request.GET.get('clear_filters') == '1'
+    request_has_filter_params = any(
+        key in request.GET for key in ['month', 'start_date', 'end_date']
     )
+
+    if clear_filters:
+        request.session.pop('transaction_filters', None)
+        selected_month = today.strftime('%Y-%m')
+        start_date = ''
+        end_date = ''
+    elif request_has_filter_params:
+        selected_month = request.GET.get('month', '').strip()
+        start_date = request.GET.get('start_date', '').strip()
+        end_date = request.GET.get('end_date', '').strip()
+        request.session['transaction_filters'] = {
+            'month': selected_month,
+            'start_date': start_date,
+            'end_date': end_date,
+        }
+    else:
+        selected_month = session_filters.get('month', today.strftime('%Y-%m'))
+        start_date = session_filters.get('start_date', '')
+        end_date = session_filters.get('end_date', '')
+
+    month_transactions = Transaction.objects.filter(user=request.user)
+    filter_label = 'Current month'
+
+    if start_date and end_date:
+        try:
+            start_obj = datetime.strptime(start_date, '%Y-%m-%d').date()
+            end_obj = datetime.strptime(end_date, '%Y-%m-%d').date()
+            month_transactions = month_transactions.filter(date__range=[start_obj, end_obj])
+            filter_label = f'{start_obj:%d %b %Y} - {end_obj:%d %b %Y}'
+        except ValueError:
+            selected_month = today.strftime('%Y-%m')
+            start_date = ''
+            end_date = ''
+
+    if not start_date or not end_date:
+        if selected_month:
+            try:
+                year, month = selected_month.split('-')
+                month_transactions = month_transactions.filter(
+                    date__year=int(year),
+                    date__month=int(month),
+                )
+                filter_label = datetime(int(year), int(month), 1).strftime('%B %Y')
+            except (ValueError, TypeError):
+                month_transactions = month_transactions.filter(
+                    date__year=today.year,
+                    date__month=today.month,
+                )
+                selected_month = today.strftime('%Y-%m')
+        else:
+            month_transactions = month_transactions.filter(
+                date__year=today.year,
+                date__month=today.month,
+            )
+            selected_month = today.strftime('%Y-%m')
 
     totals = month_transactions.values('transaction_type').annotate(total=Sum('amount'))
     income = Decimal('0.00')
@@ -54,5 +111,9 @@ def dashboard(request):
         'recent_transactions': month_transactions.order_by('-date', '-created_at')[:5],
         'expense_category_labels': category_labels,
         'expense_category_totals': category_totals,
+        'selected_month': selected_month,
+        'start_date': start_date,
+        'end_date': end_date,
+        'filter_label': filter_label,
     }
     return render(request, 'core/dashboard.html', context)
