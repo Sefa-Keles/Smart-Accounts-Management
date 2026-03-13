@@ -16,6 +16,7 @@ class Receipt(models.Model):
     
     # File stored on Cloudinary
     cloudinary_url = models.CharField(max_length=500)  # URL returned from Cloudinary
+    cloudinary_public_id = models.CharField(max_length=255, null=True, blank=True)
     original_filename = models.CharField(max_length=255)
     
     # Data extracted by OCR
