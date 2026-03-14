@@ -50,6 +50,7 @@
                     <thead class="table-light">
                         <tr>
                             <th>Vendor</th>
+                            <th>Description</th>
                             <th>Amount</th>
                             <th>Date</th>
                             <th>Type</th>
@@ -62,6 +63,7 @@
                         {% for tx in transactions %}
                         <tr>
                             <td class="fw-semibold">{{ tx.vendor_name }}</td>
+                            <td>{{ tx.description|default:"-" }}</td>
                             <td>
                                 {% if tx.transaction_type == 'income' %}
                                     <span class="text-success fw-semibold">+{{ tx.amount }} ₺</span>
@@ -71,7 +73,7 @@
                             </td>
                             <td>{{ tx.date|date:"d M Y" }}</td>
                             <td>
-                                {% if tx.transaction_type == 'income' %}
+                                <td colspan="8" class="text-muted">No transactions yet.</td>
                                     <span class="badge bg-success">Income</span>
                                 {% else %}
                                     <span class="badge bg-danger">Expense</span>
