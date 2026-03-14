@@ -164,3 +164,11 @@ CRISPY_TEMPLATE_PACK = "bootstrap5"
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'dashboard'
 LOGOUT_REDIRECT_URL = 'login'
+
+# Stripe Settings
+STRIPE_PUBLIC_KEY = os.environ.get('STRIPE_PUBLIC_KEY', '')
+STRIPE_SECRET_KEY = os.environ.get('STRIPE_SECRET_KEY', '')
+STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
+STRIPE_PRICE_BASIC = os.environ.get('STRIPE_PRICE_BASIC', '')
+STRIPE_PRICE_PREMIUM = os.environ.get('STRIPE_PRICE_PREMIUM', '')
+SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
