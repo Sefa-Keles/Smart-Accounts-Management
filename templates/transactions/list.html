@@ -19,6 +19,14 @@
            class="btn btn-sam btn-sm">
             <i class="bi bi-download me-1"></i>Export All CSV
         </a>
+        <a href="{% url 'transaction_export_pdf' %}?scope=filtered"
+           class="btn btn-outline-dark btn-sm">
+            <i class="bi bi-file-earmark-pdf me-1"></i>Export Filtered PDF
+        </a>
+        <a href="{% url 'transaction_export_pdf' %}?scope=all"
+           class="btn btn-dark btn-sm">
+            <i class="bi bi-file-earmark-pdf me-1"></i>Export All PDF
+        </a>
     </div>
 
     <div class="sam-card p-3 mb-4">
@@ -73,7 +81,7 @@
                             </td>
                             <td>{{ tx.date|date:"d M Y" }}</td>
                             <td>
-                                <td colspan="8" class="text-muted">No transactions yet.</td>
+                                {% if tx.transaction_type == 'income' %}
                                     <span class="badge bg-success">Income</span>
                                 {% else %}
                                     <span class="badge bg-danger">Expense</span>

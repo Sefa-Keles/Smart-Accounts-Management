@@ -111,7 +111,7 @@ def transaction_export_csv(request):
 	)
 
 	writer = csv.writer(response)
-	writer.writerow(["date", "vendor", "category", "amount", "type", "business_personal_flag"])
+	writer.writerow(["date", "vendor", "description", "category", "amount", "type", "business_personal_flag"])
 
 	for tx in transactions.select_related("category"):
 		category_name = tx.category.name if tx.category else ""
@@ -119,6 +119,7 @@ def transaction_export_csv(request):
 			[
 				tx.date.isoformat(),
 				tx.vendor_name,
+				tx.description or "",
 				category_name,
 				str(tx.amount),
 				tx.transaction_type,
@@ -161,10 +162,11 @@ def transaction_export_pdf(request):
 
 	pdf.setFont("Helvetica-Bold", 10)
 	pdf.drawString(40, y, "Date")
-	pdf.drawString(105, y, "Vendor")
-	pdf.drawString(265, y, "Category")
-	pdf.drawString(365, y, "Type")
-	pdf.drawString(430, y, "Flag")
+	pdf.drawString(95, y, "Vendor")
+	pdf.drawString(200, y, "Description")
+	pdf.drawString(320, y, "Category")
+	pdf.drawString(395, y, "Type")
+	pdf.drawString(445, y, "Flag")
 	pdf.drawString(500, y, "Amount")
 	y -= 12
 	pdf.line(40, y, page_width - 40, y)
@@ -177,25 +179,28 @@ def transaction_export_pdf(request):
 			y = page_height - 50
 			pdf.setFont("Helvetica-Bold", 10)
 			pdf.drawString(40, y, "Date")
-			pdf.drawString(105, y, "Vendor")
-			pdf.drawString(265, y, "Category")
-			pdf.drawString(365, y, "Type")
-			pdf.drawString(430, y, "Flag")
+			pdf.drawString(95, y, "Vendor")
+			pdf.drawString(200, y, "Description")
+			pdf.drawString(320, y, "Category")
+			pdf.drawString(395, y, "Type")
+			pdf.drawString(445, y, "Flag")
 			pdf.drawString(500, y, "Amount")
 			y -= 12
 			pdf.line(40, y, page_width - 40, y)
 			y -= 15
 			pdf.setFont("Helvetica", 9)
 
-		vendor_text = (tx.vendor_name or "")[:28]
-		category_text = (tx.category.name if tx.category else "-")[:15]
+		vendor_text = (tx.vendor_name or "")[:18]
+		description_text = (tx.description or "-")[:24]
+		category_text = (tx.category.name if tx.category else "-")[:11]
 		amount_text = str(tx.amount)
 
 		pdf.drawString(40, y, tx.date.isoformat())
-		pdf.drawString(105, y, vendor_text)
-		pdf.drawString(265, y, category_text)
-		pdf.drawString(365, y, tx.transaction_type.title())
-		pdf.drawString(430, y, tx.flag.title())
+		pdf.drawString(95, y, vendor_text)
+		pdf.drawString(200, y, description_text)
+		pdf.drawString(320, y, category_text)
+		pdf.drawString(395, y, tx.transaction_type.title())
+		pdf.drawString(445, y, tx.flag.title())
 		pdf.drawRightString(page_width - 40, y, amount_text)
 		y -= 15
 
