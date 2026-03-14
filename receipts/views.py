@@ -145,6 +145,7 @@ def receipt_review(request, receipt_id):
 
     initial_data = {
         'vendor_name': receipt.ocr_vendor or '',
+        'description': '',
         'amount': receipt.ocr_amount,
         'date': receipt.ocr_date,
         'transaction_type': 'expense',
@@ -158,6 +159,7 @@ def receipt_review(request, receipt_id):
                 user=request.user,
                 receipt=receipt,
                 vendor_name=form.cleaned_data['vendor_name'],
+                description=form.cleaned_data['description'],
                 amount=form.cleaned_data['amount'],
                 date=form.cleaned_data['date'],
                 transaction_type=form.cleaned_data['transaction_type'],
