@@ -20,12 +20,18 @@ class TransactionForm(forms.ModelForm):
         # Exclude user, receipt, and timestamps — only expose editable fields
         fields = [
             "vendor_name",
+            "description",
             "amount",
             "date",
             "transaction_type",
             "flag",
             "category",
         ]
+        widgets = {
+            "description": forms.Textarea(
+                attrs={"rows": 3, "class": "form-control", "placeholder": "Optional notes"}
+            ),
+        }
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
