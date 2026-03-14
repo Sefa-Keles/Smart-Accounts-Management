@@ -1,13 +1,18 @@
 from datetime import datetime
 from decimal import Decimal
 
+import stripe
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
+from django.http import HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.http import require_POST
 
-from core.models import Category
+from core.models import Category, Subscription
 from transactions.models import Transaction
 
 
@@ -173,3 +178,70 @@ def category_delete(request, category_id):
         messages.success(request, 'Category deleted successfully.')
 
     return redirect('category_list')
+
+
+@login_required(login_url='login')
+def subscription_plans(request):
+    """Display available subscription plans."""
+    active_subscription = Subscription.objects.filter(user=request.user, status='active').first()
+
+    return render(
+        request,
+        'core/subscription_plans.html',
+        {
+            'active_subscription': active_subscription,
+            'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+            'page_title': 'Subscription Plans',
+        },
+    )
+
+
+@login_required(login_url='login')
+@require_POST
+def create_checkout_session(request):
+    """Create a Stripe checkout session for a selected plan."""
+    selected_plan = request.POST.get('plan', '').strip().lower()
+    if selected_plan not in ['basic', 'premium']:
+        return HttpResponseBadRequest('Invalid plan selected.')
+
+    if not settings.STRIPE_SECRET_KEY:
+        return HttpResponseBadRequest('Stripe secret key is not configured.')
+
+    plan_price_map = {
+        'basic': settings.STRIPE_PRICE_BASIC,
+        'premium': settings.STRIPE_PRICE_PREMIUM,
+    }
+    price_id = plan_price_map.get(selected_plan)
+    if not price_id:
+        return HttpResponseBadRequest('Stripe price id is not configured for the selected plan.')
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
+    checkout_session = stripe.checkout.Session.create(
+        mode='subscription',
+        payment_method_types=['card'],
+        line_items=[{'price': price_id, 'quantity': 1}],
+        customer_email=request.user.email,
+        metadata={
+            'user_id': str(request.user.id),
+            'plan': selected_plan,
+        },
+        success_url=f"{settings.SITE_URL}{reverse('subscription_success')}?session_id={{CHECKOUT_SESSION_ID}}",
+        cancel_url=f"{settings.SITE_URL}{reverse('subscription_cancel')}",
+    )
+
+    return JsonResponse({'checkout_url': checkout_session.url})
+
+
+@login_required(login_url='login')
+def subscription_success(request):
+    """Handle successful Stripe checkout redirection."""
+    messages.success(request, 'Subscription checkout completed successfully.')
+    return redirect('subscription_plans')
+
+
+@login_required(login_url='login')
+def subscription_cancel(request):
+    """Handle cancelled Stripe checkout redirection."""
+    messages.info(request, 'Subscription checkout was cancelled.')
+    return redirect('subscription_plans')
