@@ -1,11 +1,13 @@
 from datetime import datetime
 from decimal import Decimal
 
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
-from django.shortcuts import render
+from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 
+from core.models import Category
 from transactions.models import Transaction
 
 
@@ -117,3 +119,57 @@ def dashboard(request):
         'filter_label': filter_label,
     }
     return render(request, 'core/dashboard.html', context)
+
+
+@login_required(login_url='login')
+def category_list(request):
+    """List categories and allow creating a custom category."""
+    if request.method == 'POST':
+        category_name = request.POST.get('name', '').strip()
+
+        if not category_name:
+            messages.error(request, 'Category name cannot be empty.')
+            return redirect('category_list')
+
+        existing_category = Category.objects.filter(name__iexact=category_name).first()
+        if existing_category:
+            messages.warning(request, 'This category already exists.')
+            return redirect('category_list')
+
+        Category.objects.create(
+            name=category_name,
+            is_system=False,
+            user=request.user,
+        )
+        messages.success(request, 'Category created successfully.')
+        return redirect('category_list')
+
+    system_categories = Category.objects.filter(is_system=True).order_by('name')
+    custom_categories = Category.objects.filter(user=request.user, is_system=False).order_by('name')
+
+    return render(
+        request,
+        'core/categories.html',
+        {
+            'system_categories': system_categories,
+            'custom_categories': custom_categories,
+            'page_title': 'Categories',
+        },
+    )
+
+
+@login_required(login_url='login')
+def category_delete(request, category_id):
+    """Delete one of the current user's custom categories."""
+    category = get_object_or_404(
+        Category,
+        id=category_id,
+        user=request.user,
+        is_system=False,
+    )
+
+    if request.method == 'POST':
+        category.delete()
+        messages.success(request, 'Category deleted successfully.')
+
+    return redirect('category_list')
