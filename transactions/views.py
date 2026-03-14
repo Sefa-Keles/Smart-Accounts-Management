@@ -6,6 +6,8 @@ from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
 from .forms import TransactionForm
 from .models import Transaction
@@ -124,6 +126,80 @@ def transaction_export_csv(request):
 			]
 		)
 
+	return response
+
+
+@login_required
+def transaction_export_pdf(request):
+	"""Export all or filtered transactions as PDF."""
+	scope = request.GET.get("scope", "filtered")
+
+	if scope == "all":
+		transactions = Transaction.objects.filter(user=request.user).order_by("-date", "-created_at")
+		report_title = "All Transactions"
+	else:
+		transactions, _, _, _, filter_label = _get_filtered_transactions(request, persist_filters=False)
+		report_title = f"Filtered Transactions ({filter_label})"
+
+	response = HttpResponse(content_type="application/pdf")
+	response["Content-Disposition"] = (
+		f'attachment; filename="transactions_{timezone.now().strftime("%Y%m%d_%H%M%S")}.pdf"'
+	)
+
+	pdf = canvas.Canvas(response, pagesize=letter)
+	page_width, page_height = letter
+	y = page_height - 50
+
+	pdf.setFont("Helvetica-Bold", 14)
+	pdf.drawString(40, y, "Smart Accounts - Transactions Report")
+	y -= 20
+	pdf.setFont("Helvetica", 10)
+	pdf.drawString(40, y, report_title)
+	y -= 15
+	pdf.drawString(40, y, f"Generated at: {timezone.now().strftime('%Y-%m-%d %H:%M:%S')}")
+	y -= 25
+
+	pdf.setFont("Helvetica-Bold", 10)
+	pdf.drawString(40, y, "Date")
+	pdf.drawString(105, y, "Vendor")
+	pdf.drawString(265, y, "Category")
+	pdf.drawString(365, y, "Type")
+	pdf.drawString(430, y, "Flag")
+	pdf.drawString(500, y, "Amount")
+	y -= 12
+	pdf.line(40, y, page_width - 40, y)
+	y -= 15
+
+	pdf.setFont("Helvetica", 9)
+	for tx in transactions.select_related("category"):
+		if y < 50:
+			pdf.showPage()
+			y = page_height - 50
+			pdf.setFont("Helvetica-Bold", 10)
+			pdf.drawString(40, y, "Date")
+			pdf.drawString(105, y, "Vendor")
+			pdf.drawString(265, y, "Category")
+			pdf.drawString(365, y, "Type")
+			pdf.drawString(430, y, "Flag")
+			pdf.drawString(500, y, "Amount")
+			y -= 12
+			pdf.line(40, y, page_width - 40, y)
+			y -= 15
+			pdf.setFont("Helvetica", 9)
+
+		vendor_text = (tx.vendor_name or "")[:28]
+		category_text = (tx.category.name if tx.category else "-")[:15]
+		amount_text = str(tx.amount)
+
+		pdf.drawString(40, y, tx.date.isoformat())
+		pdf.drawString(105, y, vendor_text)
+		pdf.drawString(265, y, category_text)
+		pdf.drawString(365, y, tx.transaction_type.title())
+		pdf.drawString(430, y, tx.flag.title())
+		pdf.drawRightString(page_width - 40, y, amount_text)
+		y -= 15
+
+	pdf.save()
 	return response
 
 
