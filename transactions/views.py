@@ -128,6 +128,30 @@ def transaction_export_csv(request):
 
 
 @login_required
+def transaction_create(request):
+	"""Create a manual transaction for the current user."""
+	if request.method == "POST":
+		form = TransactionForm(request.POST, user=request.user)
+		if form.is_valid():
+			transaction = form.save(commit=False)
+			transaction.user = request.user
+			transaction.save()
+			messages.success(request, "Transaction created successfully.")
+			return redirect("transaction_list")
+	else:
+		form = TransactionForm(user=request.user)
+
+	return render(
+		request,
+		"transactions/create.html",
+		{
+			"form": form,
+			"page_title": "Add Transaction",
+		},
+	)
+
+
+@login_required
 def transaction_edit(request, transaction_id):
 	"""Edit a single transaction owned by the current user."""
 	transaction = get_object_or_404(Transaction, id=transaction_id, user=request.user)
