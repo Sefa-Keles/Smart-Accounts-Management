@@ -54,6 +54,10 @@ class ReceiptReviewForm(forms.Form):
     """
 
     vendor_name = forms.CharField(max_length=255, required=True)
+    description = forms.CharField(
+        required=False,
+        widget=forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
+    )
     amount = forms.DecimalField(max_digits=10, decimal_places=2, required=True)
     date = forms.DateField(
         required=True,
