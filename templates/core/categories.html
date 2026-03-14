@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+
+{% block title %}Categories | Smart Accounts{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <div>
+        <h1 class="h3 mb-1">Categories</h1>
+        <p class="text-muted mb-0">Manage default and custom categories for your transactions.</p>
+    </div>
+</div>
+
+<div class="sam-card p-3 p-md-4 mb-4">
+    <h2 class="h5 mb-3">Add Custom Category</h2>
+    <form method="post" class="row g-2 align-items-end">
+        {% csrf_token %}
+        <div class="col-12 col-md-9">
+            <label for="name" class="form-label small text-muted mb-1">Category name</label>
+            <input
+                type="text"
+                id="name"
+                name="name"
+                maxlength="100"
+                class="form-control"
+                placeholder="e.g. Software"
+                required
+            >
+        </div>
+        <div class="col-12 col-md-3 d-grid">
+            <button type="submit" class="btn btn-sam">Add Category</button>
+        </div>
+    </form>
+</div>
+
+<div class="row g-3">
+    <div class="col-12 col-lg-6">
+        <div class="sam-card p-3 p-md-4 h-100">
+            <h2 class="h5 mb-3">System Categories</h2>
+            <ul class="list-group list-group-flush">
+                {% for category in system_categories %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0">
+                        <span>{{ category.name }}</span>
+                        <span class="badge text-bg-secondary">Default</span>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item px-0 text-muted">No system categories found.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+    <div class="col-12 col-lg-6">
+        <div class="sam-card p-3 p-md-4 h-100">
+            <h2 class="h5 mb-3">My Custom Categories</h2>
+            <ul class="list-group list-group-flush">
+                {% for category in custom_categories %}
+                    <li class="list-group-item d-flex justify-content-between align-items-center px-0 gap-2">
+                        <span>{{ category.name }}</span>
+                        <form method="post" action="{% url 'category_delete' category.id %}" class="m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-sm btn-outline-danger">Delete</button>
+                        </form>
+                    </li>
+                {% empty %}
+                    <li class="list-group-item px-0 text-muted">You have no custom categories yet.</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+</div>
+{% endblock %}
