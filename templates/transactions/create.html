@@ -11,6 +11,22 @@
                 <p class="mb-0 text-muted">Create a manual income or expense entry.</p>
             </div>
 
+            <div class="alert {% if transaction_limit_reached %}alert-warning{% else %}alert-light border{% endif %} mb-3" role="alert">
+                <strong>Current plan:</strong> {{ current_plan|title }}
+                {% if transaction_limit_value %}
+                    <span class="ms-2">Transactions this month: {{ transaction_usage }} / {{ transaction_limit_value }}</span>
+                {% else %}
+                    <span class="ms-2">Transactions this month: {{ transaction_usage }} / Unlimited</span>
+                {% endif %}
+
+                {% if transaction_limit_reached %}
+                    <div class="mt-2">
+                        Monthly transaction limit reached. Please upgrade your plan to add more transactions.
+                        <a href="{% url 'subscription_plans' %}" class="btn btn-sm btn-outline-dark ms-2">View Plans</a>
+                    </div>
+                {% endif %}
+            </div>
+
             <div class="sam-card">
                 <div class="card-body p-4">
                     <form method="post" novalidate>
@@ -21,7 +37,7 @@
                             <a href="{% url 'transaction_list' %}" class="btn btn-outline-secondary">
                                 <i class="bi bi-arrow-left me-1"></i>Cancel
                             </a>
-                            <button type="submit" class="btn btn-sam px-4">
+                            <button type="submit" class="btn btn-sam px-4" {% if transaction_limit_reached %}disabled{% endif %}>
                                 <i class="bi bi-check2-circle me-1"></i>Save Transaction
                             </button>
                         </div>
