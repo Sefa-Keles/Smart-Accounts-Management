@@ -276,7 +276,7 @@ def _upsert_subscription(user, stripe_subscription, fallback_plan='basic'):
     stripe_status = stripe_subscription.get('status', '')
     current_period_end_ts = stripe_subscription.get('current_period_end')
     if current_period_end_ts:
-        current_period_end = datetime.fromtimestamp(current_period_end_ts, tz=timezone.utc)
+        current_period_end = datetime.fromtimestamp(current_period_end_ts, tz=timezone.UTC)
     else:
         current_period_end = timezone.now()
 
