@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.utils import timezone
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
-from core.plan_limits import can_create_transaction
+from core.plan_limits import can_create_transaction, get_monthly_usage
 
 from .forms import TransactionForm
 from .models import Transaction
@@ -212,8 +212,10 @@ def transaction_export_pdf(request):
 @login_required
 def transaction_create(request):
 	"""Create a manual transaction for the current user."""
+	allowed, plan, limit_value = can_create_transaction(request.user)
+	monthly_usage = get_monthly_usage(request.user)
+
 	if request.method == "POST":
-		allowed, plan, limit_value = can_create_transaction(request.user)
 		if not allowed:
 			messages.error(
 				request,
@@ -236,6 +238,10 @@ def transaction_create(request):
 		"transactions/create.html",
 		{
 			"form": form,
+			"transaction_limit_reached": not allowed,
+			"current_plan": plan,
+			"transaction_limit_value": limit_value,
+			"transaction_usage": monthly_usage.get("transactions", 0),
 			"page_title": "Add Transaction",
 		},
 	)
