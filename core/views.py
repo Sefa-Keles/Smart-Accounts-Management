@@ -16,6 +16,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from core.models import Category, Subscription
+from core.plan_limits import get_monthly_usage, get_plan_limit, get_user_plan
 from transactions.models import Transaction
 
 
@@ -187,6 +188,10 @@ def category_delete(request, category_id):
 def subscription_plans(request):
     """Display available subscription plans."""
     active_subscription = Subscription.objects.filter(user=request.user, status='active').first()
+    current_plan = get_user_plan(request.user)
+    monthly_usage = get_monthly_usage(request.user)
+    basic_receipt_limit = get_plan_limit('basic', 'max_receipts_per_month')
+    basic_transaction_limit = get_plan_limit('basic', 'max_transactions_per_month')
 
     return render(
         request,
@@ -194,6 +199,10 @@ def subscription_plans(request):
         {
             'active_subscription': active_subscription,
             'stripe_public_key': settings.STRIPE_PUBLIC_KEY,
+            'current_plan': current_plan,
+            'monthly_usage': monthly_usage,
+            'basic_receipt_limit': basic_receipt_limit,
+            'basic_transaction_limit': basic_transaction_limit,
             'page_title': 'Subscription Plans',
         },
     )
