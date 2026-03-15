@@ -250,6 +250,37 @@ def subscription_cancel(request):
     return redirect('subscription_plans')
 
 
+@login_required(login_url='login')
+def create_billing_portal_session(request):
+    """Create a Stripe billing portal session for managing an active subscription."""
+    if not settings.STRIPE_SECRET_KEY:
+        messages.error(request, 'Stripe secret key is not configured.')
+        return redirect('subscription_plans')
+
+    active_subscription = Subscription.objects.filter(user=request.user, status='active').first()
+    if not active_subscription or not active_subscription.stripe_subscription_id:
+        messages.warning(request, 'No active Stripe subscription found for this account.')
+        return redirect('subscription_plans')
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+
+    try:
+        stripe_subscription = stripe.Subscription.retrieve(active_subscription.stripe_subscription_id)
+        customer_id = stripe_subscription.get('customer')
+        if not customer_id:
+            messages.error(request, 'Stripe customer information could not be found.')
+            return redirect('subscription_plans')
+
+        portal_session = stripe.billing_portal.Session.create(
+            customer=customer_id,
+            return_url=f"{settings.SITE_URL}{reverse('subscription_plans')}",
+        )
+        return redirect(portal_session.url)
+    except stripe.error.StripeError as exc:
+        messages.error(request, f'Unable to open billing portal: {str(exc)}')
+        return redirect('subscription_plans')
+
+
 def _map_stripe_status(stripe_status):
     """Map Stripe subscription status values to local status choices."""
     status_map = {
