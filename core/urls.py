@@ -6,6 +6,7 @@ from .views import (
     create_checkout_session,
     dashboard,
     home,
+    stripe_webhook,
     subscription_cancel,
     subscription_plans,
     subscription_success,
@@ -20,4 +21,5 @@ urlpatterns = [
     path('subscription/checkout/', create_checkout_session, name='create_checkout_session'),
     path('subscription/success/', subscription_success, name='subscription_success'),
     path('subscription/cancel/', subscription_cancel, name='subscription_cancel'),
+    path('subscription/webhook/', stripe_webhook, name='stripe_webhook'),
 ]

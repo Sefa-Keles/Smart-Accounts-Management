@@ -1,15 +1,18 @@
 from datetime import datetime
 from decimal import Decimal
+import json
 
 import stripe
 from django.conf import settings
 from django.contrib import messages
+from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
-from django.http import HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST
 
 from core.models import Category, Subscription
@@ -245,3 +248,108 @@ def subscription_cancel(request):
     """Handle cancelled Stripe checkout redirection."""
     messages.info(request, 'Subscription checkout was cancelled.')
     return redirect('subscription_plans')
+
+
+def _map_stripe_status(stripe_status):
+    """Map Stripe subscription status values to local status choices."""
+    status_map = {
+        'active': 'active',
+        'trialing': 'active',
+        'past_due': 'inactive',
+        'unpaid': 'inactive',
+        'canceled': 'cancelled',
+        'incomplete': 'inactive',
+        'incomplete_expired': 'expired',
+    }
+    return status_map.get(stripe_status, 'inactive')
+
+
+def _map_price_to_plan(price_id):
+    """Resolve internal plan key from configured Stripe price IDs."""
+    if price_id == settings.STRIPE_PRICE_PREMIUM:
+        return 'premium'
+    return 'basic'
+
+
+def _upsert_subscription(user, stripe_subscription, fallback_plan='basic'):
+    """Create or update subscription data for a user using Stripe payload."""
+    stripe_status = stripe_subscription.get('status', '')
+    current_period_end_ts = stripe_subscription.get('current_period_end')
+    if current_period_end_ts:
+        current_period_end = datetime.fromtimestamp(current_period_end_ts, tz=timezone.utc)
+    else:
+        current_period_end = timezone.now()
+
+    plan = fallback_plan
+    items = stripe_subscription.get('items', {}).get('data', [])
+    if items:
+        price_id = items[0].get('price', {}).get('id')
+        if price_id:
+            plan = _map_price_to_plan(price_id)
+
+    Subscription.objects.update_or_create(
+        user=user,
+        defaults={
+            'plan': plan,
+            'status': _map_stripe_status(stripe_status),
+            'current_period_end': current_period_end,
+            'stripe_subscription_id': stripe_subscription.get('id'),
+        },
+    )
+
+
+@csrf_exempt
+@require_POST
+def stripe_webhook(request):
+    """Handle Stripe webhook events and sync local subscription records."""
+    if not settings.STRIPE_SECRET_KEY:
+        return HttpResponseBadRequest('Stripe is not configured.')
+
+    payload = request.body
+    signature = request.META.get('HTTP_STRIPE_SIGNATURE', '')
+    endpoint_secret = settings.STRIPE_WEBHOOK_SECRET
+
+    try:
+        if endpoint_secret:
+            event = stripe.Webhook.construct_event(payload=payload, sig_header=signature, secret=endpoint_secret)
+        else:
+            event = json.loads(payload.decode('utf-8'))
+    except (ValueError, stripe.error.SignatureVerificationError):
+        return HttpResponse(status=400)
+
+    stripe.api_key = settings.STRIPE_SECRET_KEY
+    User = get_user_model()
+    event_type = event.get('type')
+    event_data = event.get('data', {}).get('object', {})
+
+    if event_type == 'checkout.session.completed':
+        if event_data.get('mode') == 'subscription':
+            user_id = event_data.get('metadata', {}).get('user_id')
+            fallback_plan = event_data.get('metadata', {}).get('plan', 'basic')
+            stripe_subscription_id = event_data.get('subscription')
+
+            if user_id and stripe_subscription_id:
+                try:
+                    user = User.objects.get(id=user_id)
+                    stripe_subscription = stripe.Subscription.retrieve(stripe_subscription_id)
+                    _upsert_subscription(user, stripe_subscription, fallback_plan=fallback_plan)
+                except User.DoesNotExist:
+                    pass
+
+    elif event_type == 'customer.subscription.updated':
+        stripe_subscription_id = event_data.get('id')
+        if stripe_subscription_id:
+            subscription = Subscription.objects.filter(stripe_subscription_id=stripe_subscription_id).first()
+            if subscription:
+                _upsert_subscription(subscription.user, event_data, fallback_plan=subscription.plan)
+
+    elif event_type == 'customer.subscription.deleted':
+        stripe_subscription_id = event_data.get('id')
+        if stripe_subscription_id:
+            subscription = Subscription.objects.filter(stripe_subscription_id=stripe_subscription_id).first()
+            if subscription:
+                subscription.status = 'cancelled'
+                subscription.current_period_end = timezone.now()
+                subscription.save(update_fields=['status', 'current_period_end', 'updated_at'])
+
+    return HttpResponse(status=200)
