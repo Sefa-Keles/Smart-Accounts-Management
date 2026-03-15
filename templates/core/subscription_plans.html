@@ -27,6 +27,44 @@
         </div>
     {% endif %}
 
+    <div class="sam-card p-3 p-md-4 mb-4">
+        <h5 class="mb-3">Current Plan Usage (This Month)</h5>
+        <div class="row g-3">
+            <div class="col-12 col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-muted small">Plan</div>
+                    <div class="fw-semibold">{{ current_plan|title }}</div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-muted small">Receipts</div>
+                    <div class="fw-semibold">
+                        {{ monthly_usage.receipts }}
+                        {% if current_plan == 'basic' %}
+                            / {{ basic_receipt_limit }}
+                        {% else %}
+                            / Unlimited
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-md-4">
+                <div class="border rounded p-3 h-100">
+                    <div class="text-muted small">Transactions</div>
+                    <div class="fw-semibold">
+                        {{ monthly_usage.transactions }}
+                        {% if current_plan == 'basic' %}
+                            / {{ basic_transaction_limit }}
+                        {% else %}
+                            / Unlimited
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="alert alert-light border mb-4" role="alert">
         Checkout runs in Stripe Test Mode. Use Stripe test card <strong>4242 4242 4242 4242</strong>.
     </div>
