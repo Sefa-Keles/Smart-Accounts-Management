@@ -172,3 +172,15 @@ STRIPE_WEBHOOK_SECRET = os.environ.get('STRIPE_WEBHOOK_SECRET', '')
 STRIPE_PRICE_BASIC = os.environ.get('STRIPE_PRICE_BASIC', '')
 STRIPE_PRICE_PREMIUM = os.environ.get('STRIPE_PRICE_PREMIUM', '')
 SITE_URL = os.environ.get('SITE_URL', 'http://127.0.0.1:8000')
+
+# Plan Limits
+PLAN_LIMITS = {
+    'basic': {
+        'max_receipts_per_month': 25,
+        'max_transactions_per_month': 100,
+    },
+    'premium': {
+        'max_receipts_per_month': None,
+        'max_transactions_per_month': None,
+    },
+}
