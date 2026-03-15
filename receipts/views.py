@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.core.paginator import Paginator
 import cloudinary.uploader
 from urllib.parse import urlparse
+from core.plan_limits import can_create_receipt
 from transactions.models import Transaction
 from .models import Receipt
 from .forms import ReceiptUploadForm, ReceiptReviewForm
@@ -45,6 +46,14 @@ def upload_receipt(request):
     - Processes OCR data via OCR.space
     """
     if request.method == 'POST':
+        allowed, plan, limit_value = can_create_receipt(request.user)
+        if not allowed:
+            messages.error(
+                request,
+                f"{plan.title()} plan monthly receipt limit reached ({limit_value}). Upgrade your subscription to continue.",
+            )
+            return redirect('subscription_plans')
+
         form = ReceiptUploadForm(request.POST, request.FILES)
         
         if form.is_valid():
