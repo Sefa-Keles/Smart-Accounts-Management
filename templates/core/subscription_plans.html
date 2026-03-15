@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Subscription Plans | Smart Accounts{% endblock %}
+
+{% block content %}
+<div class="container mt-5" id="subscriptionPlansRoot" data-checkout-url="{% url 'create_checkout_session' %}">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h2 class="mb-1"><i class="bi bi-stars me-2"></i>Subscription Plans</h2>
+            <p class="text-muted mb-0">Choose a plan and continue securely with Stripe Checkout.</p>
+        </div>
+    </div>
+
+    {% if active_subscription %}
+        <div class="alert alert-success mb-4" role="alert">
+            Active subscription: <strong>{{ active_subscription.plan|title }}</strong>
+            (status: {{ active_subscription.status|title }})
+        </div>
+    {% endif %}
+
+    <div class="row g-3">
+        <div class="col-12 col-lg-6">
+            <div class="sam-card p-4 h-100 border">
+                <h4 class="mb-2">Basic Plan</h4>
+                <p class="text-muted small mb-3">Essential features for individuals and light usage.</p>
+                <ul class="mb-4">
+                    <li>Receipt uploads</li>
+                    <li>Transaction tracking</li>
+                    <li>CSV and PDF exports</li>
+                </ul>
+                <button
+                    type="button"
+                    class="btn btn-outline-primary w-100 subscribe-btn"
+                    data-plan="basic"
+                    {% if active_subscription and active_subscription.plan == 'basic' and active_subscription.status == 'active' %}disabled{% endif %}
+                >
+                    {% if active_subscription and active_subscription.plan == 'basic' and active_subscription.status == 'active' %}
+                        Current Plan
+                    {% else %}
+                        Choose Basic
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+
+        <div class="col-12 col-lg-6">
+            <div class="sam-card p-4 h-100 border border-dark">
+                <h4 class="mb-2">Premium Plan</h4>
+                <p class="text-muted small mb-3">Advanced control for power users and teams.</p>
+                <ul class="mb-4">
+                    <li>Everything in Basic</li>
+                    <li>Higher usage limits</li>
+                    <li>Priority support</li>
+                </ul>
+                <button
+                    type="button"
+                    class="btn btn-dark w-100 subscribe-btn"
+                    data-plan="premium"
+                    {% if active_subscription and active_subscription.plan == 'premium' and active_subscription.status == 'active' %}disabled{% endif %}
+                >
+                    {% if active_subscription and active_subscription.plan == 'premium' and active_subscription.status == 'active' %}
+                        Current Plan
+                    {% else %}
+                        Choose Premium
+                    {% endif %}
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="{% static 'js/subscription_plans.js' %}"></script>
+{% endblock %}
