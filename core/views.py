@@ -247,6 +247,15 @@ def subscription_success(request):
             checkout_session = stripe.checkout.Session.retrieve(session_id)
 
             if checkout_session.get('mode') == 'subscription':
+                metadata_user_id = checkout_session.get('metadata', {}).get('user_id')
+                customer_email = checkout_session.get('customer_details', {}).get('email')
+                if metadata_user_id and str(request.user.id) != str(metadata_user_id):
+                    messages.error(request, 'Subscription session does not belong to the current user.')
+                    return redirect('subscription_plans')
+                if customer_email and request.user.email and customer_email.lower() != request.user.email.lower():
+                    messages.error(request, 'Subscription email does not match the current account.')
+                    return redirect('subscription_plans')
+
                 stripe_subscription_id = checkout_session.get('subscription')
                 fallback_plan = checkout_session.get('metadata', {}).get('plan', 'basic')
 
