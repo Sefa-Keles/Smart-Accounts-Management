@@ -239,6 +239,30 @@ def create_checkout_session(request):
 @login_required(login_url='login')
 def subscription_success(request):
     """Handle successful Stripe checkout redirection."""
+    session_id = request.GET.get('session_id', '').strip()
+
+    if session_id and settings.STRIPE_SECRET_KEY:
+        try:
+            stripe.api_key = settings.STRIPE_SECRET_KEY
+            checkout_session = stripe.checkout.Session.retrieve(session_id)
+
+            if checkout_session.get('mode') == 'subscription':
+                stripe_subscription_id = checkout_session.get('subscription')
+                fallback_plan = checkout_session.get('metadata', {}).get('plan', 'basic')
+
+                if stripe_subscription_id:
+                    stripe_subscription = stripe.Subscription.retrieve(stripe_subscription_id)
+                    _upsert_subscription(
+                        request.user,
+                        stripe_subscription,
+                        fallback_plan=fallback_plan,
+                    )
+        except stripe.error.StripeError:
+            messages.warning(
+                request,
+                'Checkout completed, but subscription sync is pending webhook confirmation.',
+            )
+
     messages.success(request, 'Subscription checkout completed successfully.')
     return redirect('subscription_plans')
 
