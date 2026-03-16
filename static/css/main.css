@@ -313,6 +313,17 @@ body {
     width: 42%;
 }
 
+.expense-chart-wrap {
+    position: relative;
+    width: 100%;
+    height: 320px;
+}
+
+.expense-chart-wrap canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
 @media (max-width: 576px) {
     .hero-strip h2 {
         font-size: 1.45rem;
@@ -320,5 +331,9 @@ body {
 
     .upload-dropzone {
         padding: 1rem;
+    }
+
+    .expense-chart-wrap {
+        height: 250px;
     }
 }

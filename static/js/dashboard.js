@@ -17,6 +17,8 @@ document.addEventListener('DOMContentLoaded', function () {
             datasets: [
                 {
                     data: totals,
+                    radius: '82%',
+                    cutout: '58%',
                     backgroundColor: [
                         '#1f3a5f',
                         '#2f5f93',
@@ -32,6 +34,7 @@ document.addEventListener('DOMContentLoaded', function () {
         },
         options: {
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
                 legend: {
                     position: 'bottom',
