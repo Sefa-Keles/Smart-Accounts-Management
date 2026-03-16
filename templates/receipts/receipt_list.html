@@ -15,83 +15,86 @@
         <div class="row">
             {% for receipt in receipts %}
                 <div class="col-md-6 col-lg-4 mb-4">
-                    <div class="sam-card">
-                        <div class="card-body">
-                            <!-- Receipt Preview -->
-                            <div class="text-center mb-3">
-                                {% if '.pdf' in receipt.original_filename.lower %}
-                                    <i class="bi bi-file-pdf" style="font-size: 4rem; color: #dc3545;"></i>
-                                {% else %}
-                                    <img src="{{ receipt.cloudinary_url }}" 
-                                         alt="{{ receipt.original_filename }}" 
-                                         class="img-fluid rounded" 
-                                         style="max-height: 200px; object-fit: cover;">
-                                {% endif %}
-                            </div>
-                            
-                            <!-- File Information -->
-                            <h5 class="card-title text-truncate" title="{{ receipt.original_filename }}">
-                                {{ receipt.original_filename }}
-                            </h5>
-                            
-                            <!-- Status Badge -->
-                            <div class="mb-2">
-                                {% if receipt.status == 'pending' %}
-                                    <span class="badge bg-warning text-dark">
-                                        <i class="bi bi-hourglass-split"></i> Pending OCR
-                                    </span>
-                                {% elif receipt.status == 'reviewed' %}
-                                    <span class="badge bg-info">
-                                        <i class="bi bi-eye"></i> Under Review
-                                    </span>
-                                {% elif receipt.status == 'saved' %}
-                                    <span class="badge bg-success">
-                                        <i class="bi bi-check-circle"></i> Saved
-                                    </span>
-                                {% endif %}
-                            </div>
-                            
-                            <!-- Receipt Data -->
-                            <div class="small text-muted mb-2">
-                                <div><strong>Vendor:</strong> {{ receipt.ocr_vendor|default:"-" }}</div>
-                                <div>
-                                    <strong>Amount:</strong>
-                                    {% if receipt.ocr_amount %}
-                                        {{ receipt.ocr_amount }} ₺
+                    <div class="sam-card receipt-card h-100">
+                        <div class="card-body receipt-card-body d-flex flex-column">
+                            <div class="receipt-content-inner w-100 mx-auto d-flex flex-column h-100">
+                                <!-- Receipt Preview -->
+                                <div class="receipt-preview-wrap text-center mb-3">
+                                    {% if '.pdf' in receipt.original_filename.lower %}
+                                        <i class="bi bi-file-pdf" style="font-size: 4rem; color: #dc3545;"></i>
                                     {% else %}
-                                        -
+                                        <img src="{{ receipt.cloudinary_url }}" 
+                                             alt="{{ receipt.original_filename }}" 
+                                             class="img-fluid rounded receipt-preview-image">
                                     {% endif %}
                                 </div>
-                                <div>
-                                    <strong>Date:</strong>
-                                    {% if receipt.ocr_date %}
-                                        {{ receipt.ocr_date|date:"d/m/Y" }}
-                                    {% else %}
-                                        -
+
+                                <!-- File Information -->
+                                <h5 class="card-title receipt-file-title text-center" title="{{ receipt.original_filename }}">
+                                    {{ receipt.original_filename }}
+                                </h5>
+
+                                <!-- Status Badge -->
+                                <div class="mb-3 receipt-status text-center">
+                                    {% if receipt.status == 'pending' %}
+                                        <span class="badge bg-warning text-dark">
+                                            <i class="bi bi-hourglass-split"></i> Pending OCR
+                                        </span>
+                                    {% elif receipt.status == 'reviewed' %}
+                                        <span class="badge bg-info">
+                                            <i class="bi bi-eye"></i> Under Review
+                                        </span>
+                                    {% elif receipt.status == 'saved' %}
+                                        <span class="badge bg-success">
+                                            <i class="bi bi-check-circle"></i> Saved
+                                        </span>
                                     {% endif %}
                                 </div>
-                                <div>
-                                    <strong>Category:</strong>
-                                    {% with transaction=receipt.transactions.first %}
-                                        {% if transaction and transaction.category %}
-                                            {{ transaction.category.name }}
-                                        {% else %}
-                                            -
-                                        {% endif %}
-                                    {% endwith %}
+
+                                <!-- Receipt Data -->
+                                <div class="text-center mb-3">
+                                    <div class="small text-muted receipt-info d-inline-block">
+                                        <div><strong>Vendor:</strong> {{ receipt.ocr_vendor|default:"-" }}</div>
+                                        <div>
+                                            <strong>Amount:</strong>
+                                            {% if receipt.ocr_amount %}
+                                                {{ receipt.ocr_amount }} ₺
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <strong>Date:</strong>
+                                            {% if receipt.ocr_date %}
+                                                {{ receipt.ocr_date|date:"d/m/Y" }}
+                                            {% else %}
+                                                -
+                                            {% endif %}
+                                        </div>
+                                        <div>
+                                            <strong>Category:</strong>
+                                            {% with transaction=receipt.transactions.first %}
+                                                {% if transaction and transaction.category %}
+                                                    {{ transaction.category.name }}
+                                                {% else %}
+                                                    -
+                                                {% endif %}
+                                            {% endwith %}
+                                        </div>
+                                    </div>
                                 </div>
-                            </div>
-                            
-                            <!-- Upload Time -->
-                            <p class="small text-muted">
-                                <i class="bi bi-clock"></i> {{ receipt.uploaded_at|date:"d M Y, H:i" }}
-                            </p>
-                            
-                            <!-- Action Buttons -->
-                            <div class="d-grid gap-2">
-                                <a href="{% url 'receipt_detail' receipt.id %}" class="btn btn-outline-primary btn-sm">
-                                    <i class="bi bi-eye"></i> View Details
-                                </a>
+
+                                <!-- Upload Time -->
+                                <p class="small text-muted mt-auto mb-3 receipt-upload text-center">
+                                    <i class="bi bi-clock"></i> {{ receipt.uploaded_at|date:"d M Y, H:i" }}
+                                </p>
+
+                                <!-- Action Buttons -->
+                                <div class="text-center receipt-actions">
+                                    <a href="{% url 'receipt_detail' receipt.id %}" class="btn btn-outline-primary btn-sm receipt-detail-btn">
+                                        <i class="bi bi-eye"></i> View Details
+                                    </a>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -122,7 +125,7 @@
         {% endif %}
     {% else %}
         <div class="text-center py-5">
-            <i class="bi bi-inbox" style="font-size: 5rem; color: var(--sam-navy-light);"></i>
+            <i class="bi bi-inbox" style="font-size: 5rem; color: var(--sam-navy);"></i>
             <h4 class="mt-3">No receipts uploaded yet</h4>
             <p class="text-muted">Start by uploading your first receipt!</p>
             <a href="{% url 'upload_receipt' %}" class="btn btn-sam">
