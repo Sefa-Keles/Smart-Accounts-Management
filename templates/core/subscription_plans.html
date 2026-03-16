@@ -71,7 +71,7 @@
 
     <div class="row g-3">
         <div class="col-12 col-lg-6">
-            <div class="sam-card p-4 h-100 border">
+            <div class="sam-card p-4 h-100 border d-flex flex-column subscription-plan-card">
                 <h4 class="mb-2">Basic Plan</h4>
                 <p class="h5 mb-2">GBP 9.99 <span class="text-muted fs-6">/ month</span></p>
                 <p class="text-muted small mb-3">Essential features for individuals and light usage.</p>
@@ -82,7 +82,7 @@
                 </ul>
                 <button
                     type="button"
-                    class="btn btn-outline-primary w-100 subscribe-btn"
+                    class="btn btn-outline-primary w-100 subscribe-btn mt-auto"
                     data-plan="basic"
                     {% if active_subscription and active_subscription.plan == 'basic' and active_subscription.status == 'active' %}disabled{% endif %}
                 >
@@ -96,7 +96,7 @@
         </div>
 
         <div class="col-12 col-lg-6">
-            <div class="sam-card p-4 h-100 border border-dark">
+            <div class="sam-card p-4 h-100 border border-dark d-flex flex-column subscription-plan-card">
                 <h4 class="mb-2">Premium Plan</h4>
                 <p class="h5 mb-2">GBP 19.99 <span class="text-muted fs-6">/ month</span></p>
                 <p class="text-muted small mb-3">Advanced control for power users and teams.</p>
@@ -108,7 +108,7 @@
                 </ul>
                 <button
                     type="button"
-                    class="btn btn-dark w-100 subscribe-btn"
+                    class="btn btn-dark w-100 subscribe-btn mt-auto"
                     data-plan="premium"
                     {% if active_subscription and active_subscription.plan == 'premium' and active_subscription.status == 'active' %}disabled{% endif %}
                 >
