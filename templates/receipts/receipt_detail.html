@@ -129,6 +129,15 @@
             
             <!-- Action Buttons -->
             <div class="d-grid gap-2">
+                {% if receipt.status == 'pending' %}
+                    <form method="post" class="mb-0">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning w-100">
+                            <i class="bi bi-arrow-repeat"></i> Retry OCR
+                        </button>
+                    </form>
+                {% endif %}
+                
                 <a href="{% url 'receipt_review' receipt.id %}" class="btn btn-sam">
                     <i class="bi bi-pencil"></i> Review / Manual Entry
                 </a>

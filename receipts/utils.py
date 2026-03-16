@@ -1,13 +1,16 @@
 import json
 import os
 import re
+import ssl
 from datetime import datetime
 from decimal import Decimal
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+import certifi
 
-OCR_SPACE_ENDPOINT = "https://api.ocr.space/parse/imageurl"
+
+OCR_SPACE_ENDPOINT = "https://api.ocr.space/parse/image"
 
 
 def _to_decimal(number_text):
@@ -20,17 +23,36 @@ def _to_decimal(number_text):
 
 
 def _extract_amount(raw_text):
-    """Try to find total amount from OCR text."""
+    """Try to find the final total amount from OCR text."""
     lines = raw_text.splitlines()
     amount_pattern = r"(\d+[.,]\d{2})"
 
-    for line in lines:
+    # Strategy 1: Look for "Total due" or "Total charge including VAT" context
+    # These usually contain the final invoice amount
+    target_keywords = ["total due", "total charge including vat", "total amount", "final total"]
+    for i, line in enumerate(lines):
         lower_line = line.lower()
-        if "total" in lower_line or "amount" in lower_line:
+        # Check if this line has a target keyword
+        if any(keyword in lower_line for keyword in target_keywords):
+            # Money amount might be in same line or next line
+            match = re.search(amount_pattern, line)
+            if match:
+                return _to_decimal(match.group(1))
+            # Check next line
+            if i + 1 < len(lines):
+                match = re.search(amount_pattern, lines[i + 1])
+                if match:
+                    return _to_decimal(match.group(1))
+
+    # Strategy 2: If no target keyword found, look in lines with "total" keyword
+    for i, line in enumerate(lines):
+        lower_line = line.lower()
+        if "total" in lower_line:
             match = re.search(amount_pattern, line)
             if match:
                 return _to_decimal(match.group(1))
 
+    # Strategy 3: Fallback - find largest amount in entire document
     all_matches = re.findall(amount_pattern, raw_text)
     values = [value for value in (_to_decimal(item) for item in all_matches) if value is not None]
     return max(values) if values else None
@@ -45,32 +67,72 @@ def _extract_date(raw_text):
         "%d-%m-%y",
         "%d.%m.%Y",
         "%Y-%m-%d",
+        "%d %b %y",      # 05 Nov 22
+        "%d %b %Y",      # 05 Nov 2022
+        "%d %B %y",      # 05 November 22
+        "%d %B %Y",      # 05 November 2022
     ]
 
-    tokens = raw_text.replace("\n", " ").split()
-    for token in tokens:
-        candidate = token.strip(".,:;()[]{}")
+    # Try multi-token patterns first (e.g. "05 Nov 22")
+    lines = raw_text.split('\n')
+    for line in lines:
+        line = line.strip()
+        # Try patterns that can match multi-word sequences
         for pattern in patterns:
             try:
-                return datetime.strptime(candidate, pattern).date()
+                return datetime.strptime(line, pattern).date()
             except ValueError:
                 continue
-    return None
+
+    # Fallback to tokenized approach for numeric patterns
 
 
 def _extract_vendor(raw_text):
-    """Take first meaningful text line as vendor name."""
-    skip_words = ["receipt", "invoice", "date", "total", "amount", "tax", "vat"]
-
+    """Extract vendor name: prefer lines with Ltd/Inc/Company markers (strongly prefer 'Ltd')."""
+    skip_words = ["receipt", "invoice", "date", "total", "amount", "tax", "vat", "thanks", "payment", "way", "direct", "debit", "road", "london", "account"]
+    
+    # Strategy 1: Find lines with "Ltd" (strongest indicator of company name)
     for line in raw_text.splitlines():
         candidate = line.strip()
-        if len(candidate) < 3:
+        if len(candidate) < 5 or len(candidate) > 60:
             continue
         if not any(ch.isalpha() for ch in candidate):
             continue
 
-        lower_candidate = candidate.lower()
-        if any(word in lower_candidate for word in skip_words):
+        lower = candidate.lower()
+        if any(word in lower for word in skip_words):
+            continue
+
+        # Strongly prefer "Ltd" - most reliable company indicator
+        if "ltd" in lower:
+            return candidate
+
+    # Strategy 2: Find other company markers (Inc, Corp, Solutions, etc)
+    vendor_markers = ["inc", "llc", "company", "corp", "solutions"]
+    for line in raw_text.splitlines():
+        candidate = line.strip()
+        if len(candidate) < 5 or len(candidate) > 60:
+            continue
+        if not any(ch.isalpha() for ch in candidate):
+            continue
+
+        lower = candidate.lower()
+        if any(word in lower for word in skip_words):
+            continue
+
+        if any(marker in lower for marker in vendor_markers):
+            return candidate
+
+    # Strategy 3: Fallback - get first reasonable line
+    for line in raw_text.splitlines():
+        candidate = line.strip()
+        if len(candidate) < 5 or len(candidate) > 60:
+            continue
+        if not any(ch.isalpha() for ch in candidate):
+            continue
+
+        lower = candidate.lower()
+        if any(word in lower for word in skip_words):
             continue
 
         return candidate
@@ -101,14 +163,20 @@ def process_receipt_with_ocr(file_url):
     )
 
     try:
-        with urlopen(request, timeout=25) as response:
+        ssl_context = ssl.create_default_context(cafile=certifi.where())
+        # Timeout set to 60s for PDF processing via OCR.space
+        # (OCR.space fetches and processes the file at that URL)
+        with urlopen(request, timeout=60, context=ssl_context) as response:
             response_data = json.loads(response.read().decode("utf-8"))
     except Exception as exc:
-        return {"success": False, "error": f"OCR request failed: {exc}"}
+        # Provide more context for timeout errors
+        exc_msg = str(exc)
+        if "timed out" in exc_msg.lower() or isinstance(exc, TimeoutError):
+            error_text = "OCR processing timed out. PDF may be large or network is slow. Please try again."
+        else:
+            error_text = f"OCR request failed: {exc_msg[:100]}"
+        return {"success": False, "error": error_text}
 
-    if response_data.get("IsErroredOnProcessing"):
-        error_list = response_data.get("ErrorMessage") or ["Unknown OCR error"]
-        return {"success": False, "error": "; ".join(error_list)}
 
     parsed_results = response_data.get("ParsedResults", [])
     raw_text = "\n".join(item.get("ParsedText", "") for item in parsed_results).strip()

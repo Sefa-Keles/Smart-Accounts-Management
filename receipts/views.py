@@ -140,6 +140,26 @@ def receipt_detail(request, receipt_id):
     """
     receipt = get_object_or_404(Receipt, id=receipt_id, user=request.user)
     
+    # Handle retry OCR for pending receipts
+    if request.method == 'POST' and receipt.status == 'pending':
+        ocr_result = process_receipt_with_ocr(receipt.cloudinary_url)
+        if ocr_result.get('success'):
+            receipt.ocr_raw_text = ocr_result.get('raw_text')
+            receipt.ocr_vendor = ocr_result.get('vendor')
+            receipt.ocr_amount = ocr_result.get('amount')
+            receipt.ocr_date = ocr_result.get('date')
+            receipt.status = 'reviewed'
+            receipt.save(
+                update_fields=['ocr_raw_text', 'ocr_vendor', 'ocr_amount', 'ocr_date', 'status']
+            )
+            messages.success(request, 'OCR processed successfully. Please review the data.')
+        else:
+            messages.error(
+                request,
+                f"OCR retry failed: {ocr_result.get('error')}"
+            )
+        return redirect('receipt_detail', receipt_id=receipt.id)
+    
     return render(request, 'receipts/receipt_detail.html', {
         'receipt': receipt,
         'page_title': f'Receipt #{receipt.id}'

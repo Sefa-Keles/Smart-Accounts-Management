@@ -39,10 +39,15 @@
 <main class="container py-4 py-md-5">
     {% if messages %}
         {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
-                {{ message }}
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-            </div>
+            {% with tags=message.tags|default:'' %}
+                <div class="alert sam-alert alert-dismissible fade show {% if 'error' in tags %}alert-danger{% elif 'warning' in tags %}alert-warning{% elif 'success' in tags %}alert-success{% else %}alert-info{% endif %}" role="alert">
+                    <span class="sam-alert-icon" aria-hidden="true">
+                        {% if 'error' in tags %}<i class="bi bi-exclamation-octagon-fill"></i>{% elif 'warning' in tags %}<i class="bi bi-exclamation-triangle-fill"></i>{% elif 'success' in tags %}<i class="bi bi-check-circle-fill"></i>{% else %}<i class="bi bi-info-circle-fill"></i>{% endif %}
+                    </span>
+                    <span>{{ message }}</span>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endwith %}
         {% endfor %}
     {% endif %}
 
