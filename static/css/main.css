@@ -1,0 +1,171 @@
+:root {
+    --sam-navy: #1f3a5f;
+    --sam-ink: #1e293b;
+    --sam-cream: #f8f6f1;
+    --sam-accent: #d97706;
+    --sam-soft: #dbe7f3;
+}
+
+body {
+    background: radial-gradient(circle at top right, #eef4ff 0%, var(--sam-cream) 45%, #f4efe3 100%);
+    color: var(--sam-ink);
+    min-height: 100vh;
+    font-family: "Trebuchet MS", "Segoe UI", sans-serif;
+}
+
+.sam-navbar {
+    background: linear-gradient(120deg, #112947 0%, var(--sam-navy) 55%, #375f8f 100%);
+}
+
+.brand-text {
+    letter-spacing: 0.4px;
+    font-weight: 700;
+}
+
+.sam-card {
+    border: 1px solid #d7dfeb;
+    border-radius: 14px;
+    box-shadow: 0 12px 28px rgba(31, 58, 95, 0.08);
+    background: #ffffff;
+}
+
+.hero-strip {
+    border-radius: 14px;
+    padding: 1.25rem;
+    background: linear-gradient(135deg, var(--sam-soft), #ffffff 60%);
+    border: 1px solid #cfdae8;
+}
+
+.amount-box {
+    border-radius: 12px;
+    padding: 1rem;
+    background: #fff;
+    border: 1px solid #e2e8f0;
+}
+
+.btn-sam {
+    background: var(--sam-navy);
+    color: #fff;
+    border: none;
+}
+
+.btn-sam:hover {
+    background: #173250;
+    color: #fff;
+}
+
+.btn-sam-alt {
+    background: var(--sam-accent);
+    color: #fff;
+    border: none;
+}
+
+.btn-sam-alt:hover {
+    background: #b35f05;
+    color: #fff;
+}
+
+.upload-shell {
+    max-width: 980px;
+    margin: 0 auto;
+}
+
+.upload-dropzone {
+    border: 2px dashed #c6d6ea;
+    border-radius: 12px;
+    padding: 1.25rem;
+    background: linear-gradient(180deg, #f8fbff 0%, #ffffff 100%);
+}
+
+.upload-dropzone input[type="file"] {
+    border: none;
+    padding: 0;
+}
+
+.sam-hint-box {
+    border-radius: 10px;
+    border: 1px solid #d7dfeb;
+    background: #f7fafc;
+    color: #334155;
+    padding: 0.75rem 0.9rem;
+}
+
+.workflow-step {
+    display: flex;
+    gap: 0.8rem;
+    align-items: flex-start;
+    margin-bottom: 1.15rem;
+    padding: 0.9rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.workflow-step:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(31, 58, 95, 0.08);
+}
+
+.workflow-step-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.2rem;
+}
+
+.workflow-order {
+    min-width: 20px;
+    height: 20px;
+    border-radius: 999px;
+    background: #e2e8f0;
+    color: #334155;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.workflow-sep {
+    color: #64748b;
+    font-weight: 700;
+    margin: 0 0.05rem;
+}
+
+.workflow-index {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    color: #fff;
+    background: linear-gradient(135deg, var(--sam-navy), #2f5f93);
+    flex-shrink: 0;
+}
+
+.how-it-works-panel {
+    background: linear-gradient(180deg, #ffffff 0%, #f7fafe 100%);
+}
+
+.workflow-step strong {
+    display: block;
+    margin-bottom: 0.2rem;
+    color: #1e2c45;
+}
+
+.workflow-step p {
+    line-height: 1.45;
+}
+
+@media (max-width: 576px) {
+    .hero-strip h2 {
+        font-size: 1.45rem;
+    }
+
+    .upload-dropzone {
+        padding: 1rem;
+    }
+}
