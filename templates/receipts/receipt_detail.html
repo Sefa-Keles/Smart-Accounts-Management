@@ -1,6 +1,29 @@
 {% extends "base.html" %}
 
 {% block content %}
+<style>
+    .ocr-result-card .card-body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .ocr-result-table {
+        width: min(100%, 620px);
+        margin: 0 auto;
+    }
+
+    .ocr-result-table th,
+    .ocr-result-table td {
+        text-align: center;
+        vertical-align: middle;
+    }
+
+    .ocr-raw-box {
+        width: min(100%, 620px);
+        margin: 0 auto;
+    }
+</style>
 <div class="container mt-5">
     <div class="row">
         <!-- Left: Receipt Image -->
@@ -79,13 +102,13 @@
             </div>
             
             <!-- OCR Results -->
-            <div class="sam-card mb-3">
+            <div class="sam-card mb-3 ocr-result-card">
                 <div class="card-header bg-sam-navy text-white">
                     <h5 class="mb-0"><i class="bi bi-robot"></i> OCR Results</h5>
                 </div>
                 <div class="card-body">
                     {% if receipt.ocr_vendor or receipt.ocr_amount or receipt.ocr_date %}
-                        <table class="table table-sm">
+                        <table class="table table-sm ocr-result-table">
                             {% if receipt.ocr_vendor %}
                             <tr>
                                 <th width="40%">Vendor:</th>
@@ -111,7 +134,7 @@
                         </table>
                         
                         {% if receipt.ocr_raw_text %}
-                        <div class="mt-3">
+                        <div class="mt-3 ocr-raw-box">
                             <strong>Raw OCR Text:</strong>
                             <div class="small text-muted bg-light p-2 rounded mt-1" style="max-height: 150px; overflow-y: auto;">
                                 {{ receipt.ocr_raw_text|linebreaks }}

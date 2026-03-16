@@ -2,30 +2,156 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="container mt-5">
+<style>
+    .review-receipt-card .card-body {
+        padding: 2rem 1.5rem 2rem;
+    }
+
+    .review-receipt-card .card-title {
+        margin-top: 0.15rem;
+        margin-bottom: 1rem;
+    }
+
+    .review-form-fields {
+        width: min(100%, 700px);
+        margin: 0 auto;
+    }
+
+    .review-form-row {
+        width: min(100%, 620px);
+        margin: 0 auto 1rem;
+    }
+
+    .review-form-row label {
+        display: block;
+        font-weight: 600;
+        margin-bottom: 0.45rem;
+    }
+
+    .review-form-row .form-control,
+    .review-form-row .form-select {
+        width: 100%;
+    }
+
+    .review-receipt-file-meta {
+        width: min(100%, 620px);
+        margin: 0 auto 1.25rem;
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        gap: 0.75rem;
+        text-align: left;
+    }
+
+    .review-receipt-file-meta .ms-2 {
+        margin-left: 0 !important;
+    }
+
+    .review-form-actions {
+        width: min(100%, 620px);
+        margin: 1.25rem auto 0;
+        padding-bottom: 0.75rem;
+    }
+
+    @media (max-width: 576px) {
+        .review-receipt-card .card-body {
+            padding: 1.25rem 1rem 1.5rem;
+        }
+
+        .review-form-fields,
+        .review-form-row,
+        .review-form-actions,
+        .review-receipt-file-meta {
+            width: 100%;
+        }
+
+        .review-receipt-file-meta {
+            justify-content: center;
+            text-align: center;
+        }
+    }
+</style>
+<div class="container mt-5 review-receipt-shell">
     <div class="row justify-content-center">
-        <div class="col-lg-8">
-            <div class="sam-card">
+        <div class="col-12 col-lg-9 col-xl-8">
+            <div class="sam-card review-receipt-card">
                 <div class="card-body">
-                    <h2 class="card-title mb-3">
+                    <h2 class="card-title mb-3 text-center">
                         <i class="bi bi-pencil-square"></i> Review Receipt Data
                     </h2>
-                    <p class="text-muted mb-4">
+                    <p class="text-muted mb-4 text-center">
                         Check the extracted values and edit any field before saving.
                     </p>
 
-                    <div class="mb-3">
+                    <div class="mb-3 review-receipt-file-meta">
                         <a href="{{ receipt.cloudinary_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
                             <i class="bi bi-box-arrow-up-right"></i> Open Uploaded File
                         </a>
                         <span class="ms-2 text-muted small">{{ receipt.original_filename }}</span>
                     </div>
 
-                    <form method="post">
+                    <form method="post" class="review-receipt-form">
                         {% csrf_token %}
-                        {{ form|crispy }}
 
-                        <div class="d-flex justify-content-end gap-2 mt-3">
+                        <div class="review-form-fields">
+                            <div class="review-form-row">
+                                <label for="{{ form.vendor_name.id_for_label }}">Vendor name*</label>
+                                {{ form.vendor_name }}
+                                {% for error in form.vendor_name.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="review-form-row">
+                                <label for="{{ form.description.id_for_label }}">Description</label>
+                                {{ form.description }}
+                                {% for error in form.description.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="review-form-row">
+                                <label for="{{ form.amount.id_for_label }}">Amount*</label>
+                                {{ form.amount }}
+                                {% for error in form.amount.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="review-form-row">
+                                <label for="{{ form.date.id_for_label }}">Date*</label>
+                                {{ form.date }}
+                                {% for error in form.date.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="review-form-row">
+                                <label for="{{ form.transaction_type.id_for_label }}">Transaction type*</label>
+                                {{ form.transaction_type }}
+                                {% for error in form.transaction_type.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="review-form-row">
+                                <label for="{{ form.flag.id_for_label }}">Flag*</label>
+                                {{ form.flag }}
+                                {% for error in form.flag.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+
+                            <div class="review-form-row">
+                                <label for="{{ form.category.id_for_label }}">Category</label>
+                                {{ form.category }}
+                                {% for error in form.category.errors %}
+                                    <div class="text-danger small mt-1">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-center gap-2 mt-3 flex-wrap review-form-actions">
                             <a href="{% url 'receipt_detail' receipt.id %}" class="btn btn-outline-secondary">Cancel</a>
                             <button type="submit" class="btn btn-sam">
                                 <i class="bi bi-check2-circle"></i> Confirm and Save

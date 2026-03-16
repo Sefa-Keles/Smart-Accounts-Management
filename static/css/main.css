@@ -324,6 +324,87 @@ body {
     height: 100% !important;
 }
 
+.review-receipt-shell {
+    max-width: 1080px;
+}
+
+.review-receipt-card .card-body {
+    padding: 1.5rem 1.5rem 1.25rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.review-receipt-card .card-body > * {
+    width: min(100%, 760px);
+}
+
+.review-receipt-file-meta {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    text-align: center;
+}
+
+.review-receipt-form {
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.review-receipt-form .form-label,
+.review-receipt-form label {
+    font-weight: 600;
+}
+
+.review-receipt-form .mb-3,
+.review-receipt-form .form-group,
+.review-receipt-form .form-floating {
+    width: min(100%, 620px);
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.review-receipt-form > .d-flex {
+    width: min(100%, 620px);
+}
+
+.review-receipt-form input,
+.review-receipt-form select,
+.review-receipt-form textarea {
+    text-align: left;
+}
+
+.ocr-result-card .card-body {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.ocr-result-table {
+    width: min(100%, 620px);
+    margin: 0 auto;
+}
+
+.ocr-result-table th,
+.ocr-result-table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.ocr-result-table th {
+    width: 40%;
+}
+
+.ocr-raw-box {
+    width: min(100%, 620px);
+    margin: 0 auto;
+}
+
 @media (max-width: 576px) {
     .hero-strip h2 {
         font-size: 1.45rem;
@@ -335,5 +416,16 @@ body {
 
     .expense-chart-wrap {
         height: 250px;
+    }
+
+    .review-receipt-card .card-body {
+        padding: 1.1rem;
+    }
+
+    .review-receipt-form,
+    .review-receipt-form .mb-3,
+    .review-receipt-form .form-group,
+    .review-receipt-form .form-floating {
+        width: 100%;
     }
 }

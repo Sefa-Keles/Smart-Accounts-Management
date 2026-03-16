@@ -53,12 +53,21 @@ class ReceiptReviewForm(forms.Form):
     OCR values are used as initial values, but user can edit everything.
     """
 
-    vendor_name = forms.CharField(max_length=255, required=True)
+    vendor_name = forms.CharField(
+        max_length=255,
+        required=True,
+        widget=forms.TextInput(attrs={"class": "form-control"}),
+    )
     description = forms.CharField(
         required=False,
         widget=forms.Textarea(attrs={"rows": 3, "class": "form-control"}),
     )
-    amount = forms.DecimalField(max_digits=10, decimal_places=2, required=True)
+    amount = forms.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        required=True,
+        widget=forms.NumberInput(attrs={"class": "form-control", "step": "0.01"}),
+    )
     date = forms.DateField(
         required=True,
         widget=forms.DateInput(attrs={"type": "date", "class": "form-control"}),
@@ -67,12 +76,18 @@ class ReceiptReviewForm(forms.Form):
     transaction_type = forms.ChoiceField(
         choices=[("expense", "Expense"), ("income", "Income")],
         required=True,
+        widget=forms.Select(attrs={"class": "form-select"}),
     )
     flag = forms.ChoiceField(
         choices=[("personal", "Personal"), ("business", "Business")],
         required=True,
+        widget=forms.Select(attrs={"class": "form-select"}),
     )
-    category = forms.ModelChoiceField(queryset=Category.objects.none(), required=False)
+    category = forms.ModelChoiceField(
+        queryset=Category.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={"class": "form-select"}),
+    )
 
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
