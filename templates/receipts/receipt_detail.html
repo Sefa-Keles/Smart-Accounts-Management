@@ -9,27 +9,29 @@
                 <div class="card-header bg-sam-navy text-white">
                     <h5 class="mb-0"><i class="bi bi-image"></i> Receipt Image</h5>
                 </div>
-                <div class="card-body text-center">
-                    {% if '.pdf' in receipt.original_filename.lower %}
-                        <i class="bi bi-file-pdf" style="font-size: 8rem; color: #dc3545;"></i>
-                        <p class="mt-3">
-                            <a href="{{ receipt.cloudinary_url }}" target="_blank" class="btn btn-primary">
-                                <i class="bi bi-download"></i> Open PDF
-                            </a>
-                        </p>
-                    {% else %}
-                        <img src="{{ receipt.cloudinary_url }}" 
-                             alt="{{ receipt.original_filename }}" 
-                             class="img-fluid rounded shadow">
-                        <p class="mt-3">
-                            <a href="{{ receipt.cloudinary_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
-                                <i class="bi bi-arrows-fullscreen"></i> Full Size
-                            </a>
-                        </p>
-                    {% endif %}
-                    
-                    <div class="mt-3">
-                        <small class="text-muted">{{ receipt.original_filename }}</small>
+                <div class="card-body receipt-detail-preview-body">
+                    <div class="receipt-detail-preview-content text-center">
+                        {% if '.pdf' in receipt.original_filename.lower %}
+                            <i class="bi bi-file-pdf" style="font-size: 8rem; color: #dc3545;"></i>
+                            <p class="mt-3 mb-0">
+                                <a href="{{ receipt.cloudinary_url }}" target="_blank" class="btn btn-primary">
+                                    <i class="bi bi-download"></i> Open PDF
+                                </a>
+                            </p>
+                        {% else %}
+                            <img src="{{ receipt.cloudinary_url }}" 
+                                 alt="{{ receipt.original_filename }}" 
+                                 class="img-fluid rounded shadow receipt-detail-image">
+                            <p class="mt-3 mb-0">
+                                <a href="{{ receipt.cloudinary_url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                    <i class="bi bi-arrows-fullscreen"></i> Full Size
+                                </a>
+                            </p>
+                        {% endif %}
+
+                        <div class="receipt-detail-filename-wrap">
+                            <small class="text-muted">{{ receipt.original_filename }}</small>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -42,10 +44,10 @@
                 <div class="card-header bg-sam-navy text-white">
                     <h5 class="mb-0"><i class="bi bi-info-circle"></i> Receipt Information</h5>
                 </div>
-                <div class="card-body">
-                    <table class="table table-sm">
+                <div class="card-body receipt-info-card-body">
+                    <table class="table table-sm receipt-info-table mb-0">
                         <tr>
-                            <th width="40%">Status:</th>
+                            <th>Status:</th>
                             <td>
                                 {% if receipt.status == 'pending' %}
                                     <span class="badge bg-warning text-dark">
@@ -120,7 +122,6 @@
                         <div class="text-center text-muted py-4">
                             <i class="bi bi-hourglass-split" style="font-size: 3rem;"></i>
                             <p class="mt-2">OCR processing not yet completed</p>
-                            <small>Receipt will be processed by OCR in PHASE 3.3</small>
                         </div>
                     {% endif %}
                 </div>

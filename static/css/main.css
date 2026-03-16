@@ -215,6 +215,65 @@ body {
     padding-bottom: 0.9rem;
 }
 
+.receipt-detail-preview-body {
+    min-height: 360px;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+    padding: 1.5rem !important;
+}
+
+.receipt-detail-preview-content {
+    width: 100%;
+    flex: 1;
+    min-height: 0;
+    display: grid;
+    grid-template-rows: 1fr auto auto auto 1fr;
+    justify-items: center;
+    align-content: stretch;
+    row-gap: 0.85rem;
+}
+
+.receipt-detail-preview-content > :first-child {
+    grid-row: 2;
+}
+
+.receipt-detail-preview-content > p {
+    grid-row: 3;
+    margin-top: 0 !important;
+    margin-bottom: 0;
+}
+
+.receipt-detail-filename-wrap {
+    grid-row: 4;
+    padding-bottom: 0;
+}
+
+.receipt-detail-pdf-icon {
+    font-size: 8rem;
+    color: #dc3545;
+}
+
+.receipt-detail-image {
+    max-height: 320px;
+    object-fit: contain;
+}
+
+.receipt-info-card-body {
+    padding-top: 0.9rem;
+    padding-bottom: 0.9rem;
+}
+
+.receipt-info-table th,
+.receipt-info-table td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.receipt-info-table th {
+    width: 42%;
+}
+
 @media (max-width: 576px) {
     .hero-strip h2 {
         font-size: 1.45rem;
