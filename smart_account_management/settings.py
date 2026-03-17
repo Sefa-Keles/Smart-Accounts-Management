@@ -11,17 +11,21 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
 import os
+import runpy
 from pathlib import Path
 import dj_database_url
 import cloudinary
 import cloudinary.uploader
 import cloudinary.api
 
-if os.path.isfile('env.py'):
-    import env
-
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+# Load local env.py from the project root.
+# This lets us run the app from any folder and still pick up local env vars.
+env_file = BASE_DIR / 'env.py'
+if env_file.is_file():
+    runpy.run_path(str(env_file))
 
 # Cloudinary Configuration
 cloudinary.config(
