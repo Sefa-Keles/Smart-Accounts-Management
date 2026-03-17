@@ -396,18 +396,21 @@ def _upsert_subscription(user, stripe_subscription, fallback_plan='basic'):
     """Create or update subscription data for a user using Stripe payload."""
     stripe_status = stripe_subscription.get('status', '')
     cancel_at_period_end = bool(stripe_subscription.get('cancel_at_period_end', False))
+    plan = fallback_plan
+    items = stripe_subscription.get('items', {}).get('data', [])
     current_period_end_ts = stripe_subscription.get('current_period_end')
+
+    if items:
+        if not current_period_end_ts:
+            current_period_end_ts = items[0].get('current_period_end')
+        price_id = items[0].get('price', {}).get('id')
+        if price_id:
+            plan = _map_price_to_plan(price_id)
+
     if current_period_end_ts:
         current_period_end = datetime.fromtimestamp(current_period_end_ts, tz=timezone.UTC)
     else:
         current_period_end = timezone.now()
-
-    plan = fallback_plan
-    items = stripe_subscription.get('items', {}).get('data', [])
-    if items:
-        price_id = items[0].get('price', {}).get('id')
-        if price_id:
-            plan = _map_price_to_plan(price_id)
 
     Subscription.objects.update_or_create(
         user=user,
