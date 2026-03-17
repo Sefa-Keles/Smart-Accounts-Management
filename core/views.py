@@ -196,6 +196,7 @@ def category_delete(request, category_id):
 @login_required(login_url='login')
 def subscription_plans(request):
     """Display available subscription plans."""
+    _sync_subscription_from_stripe(request.user)
     active_subscription = Subscription.objects.filter(user=request.user, status='active').first()
     current_plan = get_user_plan(request.user)
     monthly_usage = get_monthly_usage(request.user)
@@ -374,9 +375,27 @@ def _map_price_to_plan(price_id):
     return 'basic'
 
 
+def _sync_subscription_from_stripe(user):
+    """Refresh the local subscription record from Stripe when possible."""
+    if not settings.STRIPE_SECRET_KEY:
+        return
+
+    subscription = Subscription.objects.filter(user=user).first()
+    if not subscription or not subscription.stripe_subscription_id:
+        return
+
+    try:
+        stripe.api_key = settings.STRIPE_SECRET_KEY
+        stripe_subscription = stripe.Subscription.retrieve(subscription.stripe_subscription_id)
+        _upsert_subscription(user, stripe_subscription, fallback_plan=subscription.plan)
+    except stripe.error.StripeError:
+        return
+
+
 def _upsert_subscription(user, stripe_subscription, fallback_plan='basic'):
     """Create or update subscription data for a user using Stripe payload."""
     stripe_status = stripe_subscription.get('status', '')
+    cancel_at_period_end = bool(stripe_subscription.get('cancel_at_period_end', False))
     current_period_end_ts = stripe_subscription.get('current_period_end')
     if current_period_end_ts:
         current_period_end = datetime.fromtimestamp(current_period_end_ts, tz=timezone.UTC)
@@ -395,6 +414,7 @@ def _upsert_subscription(user, stripe_subscription, fallback_plan='basic'):
         defaults={
             'plan': plan,
             'status': _map_stripe_status(stripe_status),
+            'cancel_at_period_end': cancel_at_period_end,
             'current_period_end': current_period_end,
             'stripe_subscription_id': stripe_subscription.get('id'),
         },

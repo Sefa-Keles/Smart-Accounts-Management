@@ -40,6 +40,7 @@ class Subscription(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='subscription')
     plan = models.CharField(max_length=50, choices=PLAN_CHOICES)
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='active')
+    cancel_at_period_end = models.BooleanField(default=False)
     current_period_end = models.DateTimeField()
     stripe_subscription_id = models.CharField(max_length=200, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
