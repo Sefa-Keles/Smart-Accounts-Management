@@ -8,6 +8,7 @@ from .views import (
     dashboard,
     home,
     stripe_webhook,
+    stripe_debug_status,
     subscription_cancel,
     subscription_plans,
     subscription_success,
@@ -23,5 +24,6 @@ urlpatterns = [
     path('subscription/manage/', create_billing_portal_session, name='create_billing_portal_session'),
     path('subscription/success/', subscription_success, name='subscription_success'),
     path('subscription/cancel/', subscription_cancel, name='subscription_cancel'),
+    path('subscription/debug/stripe/', stripe_debug_status, name='stripe_debug_status'),
     path('subscription/webhook/', stripe_webhook, name='stripe_webhook'),
 ]

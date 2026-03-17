@@ -8,7 +8,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.contrib.auth.decorators import login_required
 from django.db.models import Sum
-from django.http import HttpResponse, HttpResponseBadRequest, JsonResponse
+from django.http import HttpResponse, HttpResponseBadRequest, HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse
 from django.utils import timezone
@@ -18,6 +18,15 @@ from django.views.decorators.http import require_POST
 from core.models import Category, Subscription
 from core.plan_limits import get_monthly_usage, get_plan_limit, get_user_plan
 from transactions.models import Transaction
+
+
+def _masked_value(value):
+    """Return a safe, short preview of sensitive settings for debugging."""
+    if not value:
+        return ''
+    if len(value) <= 8:
+        return '*' * len(value)
+    return f"{value[:6]}...{value[-4:]}"
 
 
 def home(request):
@@ -206,6 +215,27 @@ def subscription_plans(request):
             'page_title': 'Subscription Plans',
         },
     )
+
+
+@login_required(login_url='login')
+def stripe_debug_status(request):
+    """Superuser-only runtime diagnostics for Stripe configuration values."""
+    if not request.user.is_superuser:
+        return HttpResponseForbidden('Forbidden')
+
+    payload = {
+        'stripe_public_key_set': bool(settings.STRIPE_PUBLIC_KEY),
+        'stripe_secret_key_set': bool(settings.STRIPE_SECRET_KEY),
+        'stripe_price_basic_set': bool(settings.STRIPE_PRICE_BASIC),
+        'stripe_price_premium_set': bool(settings.STRIPE_PRICE_PREMIUM),
+        'stripe_webhook_secret_set': bool(settings.STRIPE_WEBHOOK_SECRET),
+        'site_url': settings.SITE_URL,
+        'stripe_public_key_preview': _masked_value(settings.STRIPE_PUBLIC_KEY),
+        'stripe_secret_key_preview': _masked_value(settings.STRIPE_SECRET_KEY),
+        'stripe_price_basic_preview': _masked_value(settings.STRIPE_PRICE_BASIC),
+        'stripe_price_premium_preview': _masked_value(settings.STRIPE_PRICE_PREMIUM),
+    }
+    return JsonResponse(payload)
 
 
 @login_required(login_url='login')
