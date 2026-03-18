@@ -57,12 +57,13 @@
     <h2 class="h5 mb-3">Recent Transactions</h2>
     <div class="table-responsive">
         <table class="table align-middle">
+            <caption class="visually-hidden">Recent transactions summary table</caption>
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Vendor</th>
-                    <th>Type</th>
-                    <th class="text-end">Amount</th>
+                    <th scope="col">Date</th>
+                    <th scope="col">Vendor</th>
+                    <th scope="col">Type</th>
+                    <th scope="col" class="text-end">Amount</th>
                 </tr>
             </thead>
             <tbody>
@@ -92,7 +93,7 @@
         {{ expense_category_labels|json_script:"expense-category-labels" }}
         {{ expense_category_totals|json_script:"expense-category-totals" }}
         <div class="expense-chart-wrap" style="position: relative; height: 320px; max-width: 560px; margin: 0 auto;">
-            <canvas id="expenseCategoryChart"></canvas>
+            <canvas id="expenseCategoryChart" role="img" aria-label="Expense breakdown by category chart">Expense breakdown by category chart</canvas>
         </div>
     {% else %}
         <p class="text-muted mb-0">No expense data available for the current month.</p>

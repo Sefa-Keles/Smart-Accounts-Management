@@ -13,6 +13,47 @@ body {
     font-family: "Trebuchet MS", "Segoe UI", sans-serif;
 }
 
+.skip-link {
+    position: absolute;
+    left: 0.75rem;
+    top: -44px;
+    z-index: 2000;
+    background: #111827;
+    color: #ffffff;
+    padding: 0.55rem 0.8rem;
+    border-radius: 8px;
+    font-weight: 700;
+    text-decoration: none;
+}
+
+.skip-link:focus,
+.skip-link:focus-visible {
+    top: 0.75rem;
+}
+
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+.btn:focus-visible,
+.form-control:focus-visible,
+.form-select:focus-visible {
+    outline: 3px solid #0ea5e9;
+    outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
 .sam-navbar {
     background: linear-gradient(120deg, #112947 0%, var(--sam-navy) 55%, #375f8f 100%);
 }

@@ -69,8 +69,9 @@
                 </div>
                 <div class="card-body receipt-info-card-body">
                     <table class="table table-sm receipt-info-table mb-0">
+                        <caption class="visually-hidden">Receipt file metadata and processing status</caption>
                         <tr>
-                            <th>Status:</th>
+                            <th scope="row">Status:</th>
                             <td>
                                 {% if receipt.status == 'pending' %}
                                     <span class="badge bg-warning text-dark">
@@ -88,11 +89,11 @@
                             </td>
                         </tr>
                         <tr>
-                            <th>Upload Date:</th>
+                            <th scope="row">Upload Date:</th>
                             <td>{{ receipt.uploaded_at|date:"d F Y, H:i" }}</td>
                         </tr>
                         <tr>
-                            <th>File Name:</th>
+                            <th scope="row">File Name:</th>
                             <td class="text-truncate" title="{{ receipt.original_filename }}">
                                 {{ receipt.original_filename }}
                             </td>
@@ -109,16 +110,17 @@
                 <div class="card-body">
                     {% if receipt.ocr_vendor or receipt.ocr_amount or receipt.ocr_date %}
                         <table class="table table-sm ocr-result-table">
+                            <caption class="visually-hidden">Extracted OCR fields</caption>
                             {% if receipt.ocr_vendor %}
                             <tr>
-                                <th width="40%">Vendor:</th>
+                                <th scope="row" width="40%">Vendor:</th>
                                 <td>{{ receipt.ocr_vendor }}</td>
                             </tr>
                             {% endif %}
                             
                             {% if receipt.ocr_amount %}
                             <tr>
-                                <th>Amount:</th>
+                                <th scope="row">Amount:</th>
                                 <td class="fs-5 text-success">
                                     <strong>{{ receipt.ocr_amount }} ₺</strong>
                                 </td>
@@ -127,7 +129,7 @@
                             
                             {% if receipt.ocr_date %}
                             <tr>
-                                <th>Date:</th>
+                                <th scope="row">Date:</th>
                                 <td>{{ receipt.ocr_date|date:"d/m/Y" }}</td>
                             </tr>
                             {% endif %}
