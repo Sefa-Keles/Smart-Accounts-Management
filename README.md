@@ -2,6 +2,10 @@
 
 Smart Accounts Management is a Django-based financial tracking platform that helps individuals and teams manage income and expenses, upload receipts/invoices, extract data with OCR, and enforce subscription-based monthly usage limits.
 
+## 📌 Project Overview
+
+![Light Mode Mockup](static/images/all_devices.png)
+
 ## Table of Contents
 
 1. [Project Overview](#project-overview)
